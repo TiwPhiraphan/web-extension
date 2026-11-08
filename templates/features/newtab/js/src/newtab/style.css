@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+.container {
+  text-align: center;
+  padding: 32px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+}
+
+#time {
+  font-size: 1.25rem;
+  color: #4b5563;
+  margin: 0;
+}
+

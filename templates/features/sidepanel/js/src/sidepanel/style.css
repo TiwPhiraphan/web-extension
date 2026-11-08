@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+p {
+  font-size: 0.875rem;
+  margin: 0;
+  color: #4b5563;
+}
+
