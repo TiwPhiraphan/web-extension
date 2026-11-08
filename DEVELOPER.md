@@ -117,4 +117,6 @@ To extend the CLI with a new extension capability:
   ```bash
   npm publish --dry-run
   ```
+- **Automated Publishing:** A GitHub Actions workflow is configured at `.github/workflows/publish.yml` to automatically build, test, and publish to npm with `--provenance --access=public` whenever a new GitHub Release is published (`on: release`). Ensure the repository secret `NPM_TOKEN` is set up with publish permissions on npmjs.org.
 - **Unpublish History:** The package name `web-extension` has past unpublish records on the npm registry. Do not attempt live publishing without explicit clearance from the repository owner.
+

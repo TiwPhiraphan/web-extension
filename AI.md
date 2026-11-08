@@ -267,3 +267,4 @@ Automated testing must verify:
    - Suite C: Multi-browser (Chrome MV3, Firefox MV3, Safari MV2).
    - Suite D: Content-only TS (Chrome, Firefox).
    - Suite E: Content-only JS (Firefox MV2).
+
