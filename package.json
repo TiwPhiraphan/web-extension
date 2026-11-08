@@ -1,7 +1,7 @@
 {
   "name": "web-extension",
-  "version": "2.0.0",
-  "description": "Scaffold cross-browser extensions with Vite and CRXJS",
+  "version": "2.1.0",
+  "description": "Scaffold cross-browser extensions with Vite/CRXJS or Zero-Build Vanilla",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {

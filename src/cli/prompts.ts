@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { ParsedArgs } from './args.js';
 import type {
   BrowserKey,
+  Bundler,
   ContentScriptRunAt,
   ContentScriptWorld,
   Context,
@@ -134,6 +135,32 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
         initialValue: 'full',
       }),
     ) as ProjectType;
+  }
+
+  let bundler: Bundler = args.bundler || (useDefaults ? 'vite' : (undefined as any));
+  if (!bundler) {
+    if (!isTTY) {
+      bundler = 'vite';
+    } else {
+      bundler = handleCancel(
+        await p.select({
+          message: 'Select build tool / bundler:',
+          options: [
+            {
+              value: 'vite',
+              label: 'Vite + CRXJS',
+              hint: 'Modern HMR, TypeScript, bundling, multi-browser',
+            },
+            {
+              value: 'none',
+              label: 'None / Vanilla',
+              hint: 'Zero-build, lightweight, instant Load unpacked',
+            },
+          ],
+          initialValue: 'vite',
+        }),
+      ) as Bundler;
+    }
   }
 
   let browsers: BrowserKey[] = args.browser?.length
@@ -415,15 +442,16 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     p.log.info(`Using ${chosenPm} (detected from ${formatPmSource(detectedPm.source)})`);
   }
 
-  let install: boolean = args.install ?? true;
+  const defaultInstall = bundler === 'none' && language === 'js' ? false : true;
+  let install: boolean = args.install ?? defaultInstall;
   if (args.install === undefined) {
     if (useDefaults || !isTTY) {
-      install = true;
+      install = defaultInstall;
     } else {
       install = handleCancel(
         await p.confirm({
           message: 'Install dependencies now?',
-          initialValue: true,
+          initialValue: defaultInstall,
         }),
       ) as boolean;
     }
@@ -455,6 +483,7 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     ifExists,
     language,
     projectType,
+    bundler,
     browsers,
     firefoxMv,
     safariMv,

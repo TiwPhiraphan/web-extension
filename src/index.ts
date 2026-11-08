@@ -119,6 +119,29 @@ async function main(): Promise<void> {
 
   const relPath = path.relative(process.cwd(), ctx.targetDir);
   const cdInstruction = relPath && relPath !== '.' ? `cd ${relPath}\n  ` : '';
+
+  if (ctx.bundler === 'none') {
+    if (ctx.language === 'js') {
+      const loadPath = relPath && relPath !== '.' ? relPath : '.';
+      p.outro(
+        pico.green(
+          `Done! To load your extension (Zero-Build):\n\n  1. Open ${pico.bold('chrome://extensions')} in your browser\n  2. Enable ${pico.bold('Developer mode')} (top right)\n  3. Click ${pico.bold('Load unpacked')} and select: ${pico.cyan(loadPath)}\n`,
+        ),
+      );
+    } else {
+      const devCommand = getRunCommand(ctx.pm, 'dev');
+      const distPath = path.join(relPath || '.', 'dist');
+      p.outro(
+        pico.green(
+          `Done! To get started:\n\n  ${pico.bold(
+            `${cdInstruction}${devCommand}`,
+          )}\n  Then load unpacked from: ${pico.cyan(distPath)}\n`,
+        ),
+      );
+    }
+    return;
+  }
+
   const firstBrowser = ctx.browsers[0];
   const devCommand = getRunCommand(ctx.pm, `dev:${firstBrowser}`);
 

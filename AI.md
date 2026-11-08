@@ -41,6 +41,9 @@ All flags can be provided in kebab-case.
 | `--if-exists` | string | `cancel`, `overwrite`, `merge` | `cancel` | Action when target directory is not empty. |
 | `--overwrite` | boolean | `true`, `false` | `false` | Convenience alias for `--if-exists overwrite`. |
 | `--lang` | string | `ts`, `js` | `ts` | TypeScript or JavaScript. |
+| `--bundler` | string | `vite`, `none` | `vite` | Build tool: Vite + CRXJS or Zero-Build Vanilla. |
+| `--vanilla` | boolean | `true`, `false` | `false` | Shorthand for `--bundler none`. |
+| `--no-bundler` | boolean | `true`, `false` | `false` | Alias for `--bundler none`. |
 | `--type` | string | `full`, `content-only` | `full` | Full extension or headless content-script only. |
 | `--browser` | string (repeatable/comma) | `chrome`, `firefox`, `safari` | `chrome` | Target browsers. `chromium` maps to `chrome`. |
 | `--firefox-mv` | number / string | `2`, `3` | `3` | Firefox manifest version. |
@@ -79,6 +82,7 @@ The CLI enforces strict validation with exit code `1` upon invalid inputs or inc
 The CLI prints warnings to stderr but continues execution when:
 - `--firefox-mv` is passed without `firefox` in `--browser`.
 - `--safari-mv` is passed without `safari` in `--browser`.
+- `--bundler none` is passed with `safari` in `--browser` (warning about Xcode converter).
 - Content script flags (`--matches`, `--run-at`, `--world`, `--css`) are passed when `content` feature is absent.
 - `--git` is requested but the target directory is already inside an existing Git repository.
 
@@ -149,6 +153,17 @@ Generated projects employ dual-mode packaging:
   1. Compiles HTML entry points (`popup.html`, `options.html`, `devtools.html`, etc.) via Rollup inputs.
   2. Compiles content scripts and background scripts as standalone IIFE bundles (`formats: ['iife']`) so they can execute in classic MV2 runtimes without ES module loading limitations.
   3. Emits `dist/<target>/manifest.json` dynamically from `manifest.config`.
+
+### 6.3 Zero-Build Vanilla Pipeline (`--bundler none`)
+- Completely eliminates Vite, CRXJS, and build tools.
+- **JavaScript Mode (`--lang js`):**
+  - Zero-Dependency Guarantee: No dependencies or devDependencies in `package.json`.
+  - Places `manifest.json`, `icons/`, and `src/` directly at the project root.
+  - The project directory can be loaded unpacked into `chrome://extensions` immediately without any build command or dependency installation.
+- **TypeScript Mode (`--lang ts`):**
+  - Generates lightweight `tsconfig.json` utilizing pure `tsc` (`build: tsc`, `dev: tsc --watch`) compiling `src/` to `dist/`.
+  - Static assets (`manifest.json`, `icons/`, HTML, CSS) are mirrored to `dist/`.
+  - Chrome loads `dist/` directly after running `tsc`.
 
 ---
 

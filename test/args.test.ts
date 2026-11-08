@@ -45,6 +45,28 @@ describe('parseCliArgs', () => {
     expect(res.features).toEqual([]);
     expect(res.extras).toEqual([]);
   });
+
+  it('parses --bundler vite and --bundler none correctly', () => {
+    const res1 = parseCliArgs(['--bundler', 'vite']);
+    expect(res1.bundler).toBe('vite');
+
+    const res2 = parseCliArgs(['--bundler', 'none']);
+    expect(res2.bundler).toBe('none');
+  });
+
+  it('supports --vanilla and --no-bundler shorthands for --bundler none', () => {
+    const res1 = parseCliArgs(['--vanilla']);
+    expect(res1.bundler).toBe('none');
+
+    const res2 = parseCliArgs(['--no-bundler']);
+    expect(res2.bundler).toBe('none');
+  });
+
+  it('rejects invalid bundler value', () => {
+    expect(() => parseCliArgs(['--bundler', 'webpack'])).toThrow(
+      'Invalid value "webpack" for --bundler. Expected one of: vite, none',
+    );
+  });
 });
 
 describe('validateFlagCombinations', () => {
@@ -92,6 +114,12 @@ describe('validateFlagCombinations', () => {
     const args = parseCliArgs(['--browser', 'chrome', '--firefox-mv', '2']);
     expect(() => validateFlagCombinations(args)).not.toThrow();
     expect(args.warnings.some((w) => w.includes('--firefox-mv'))).toBe(true);
+  });
+
+  it('warns when safari is combined with --bundler none', () => {
+    const args = parseCliArgs(['--browser', 'safari', '--bundler', 'none']);
+    validateFlagCombinations(args);
+    expect(args.warnings.some((w) => w.includes('Safari target with vanilla'))).toBe(true);
   });
 });
 

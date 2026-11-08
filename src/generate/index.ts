@@ -9,6 +9,7 @@ import { buildConfigs } from './tsconfig.js';
 import { copyDirectory } from './copy.js';
 import { toSlug } from '../utils/validate.js';
 import { getInstallCommand, getRunCommand } from '../utils/pm.js';
+import { generateVanillaProject } from './vanilla.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,6 +97,10 @@ ${targets.some((t) => t.browser === 'firefox') ? '- Customize the Firefox Gecko 
 }
 
 export function generateProject(ctx: Context): { targetDir: string; targets: TargetConfig[] } {
+  if (ctx.bundler === 'none') {
+    return generateVanillaProject(ctx);
+  }
+
   const targetDir = path.resolve(ctx.targetDir);
   const templatesDir = getTemplatesDir();
   const slug = toSlug(ctx.projectName);

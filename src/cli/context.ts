@@ -1,5 +1,6 @@
 export type Language = 'ts' | 'js';
 export type ProjectType = 'full' | 'content-only';
+export type Bundler = 'vite' | 'none';
 export type BrowserKey = 'chrome' | 'firefox' | 'safari';
 export type ManifestVersion = 2 | 3;
 
@@ -43,6 +44,7 @@ export interface Context {
   ifExists: IfExistsAction;
   language: Language;
   projectType: ProjectType;
+  bundler?: Bundler;
   browsers: BrowserKey[];
   firefoxMv?: ManifestVersion;
   safariMv?: ManifestVersion;

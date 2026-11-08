@@ -144,5 +144,130 @@ describe('generateProject', () => {
     expect(fs.existsSync(path.join(tmpDir, 'manifest.config.js'))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, 'src/popup/main.js'))).toBe(true);
   });
+
+  it('generates vanilla project with --bundler none --lang js (Zero-Build)', () => {
+    const ctx: Context = {
+      projectName: 'vanilla-js-ext',
+      targetDir: tmpDir,
+      ifExists: 'overwrite',
+      language: 'js',
+      projectType: 'full',
+      bundler: 'none',
+      browsers: ['chrome'],
+      features: ['background', 'content', 'popup'],
+      extras: ['storage'],
+      contentScript: {
+        matches: ['https://*/*'],
+        runAt: 'document_idle',
+        world: 'ISOLATED',
+        css: true,
+      },
+      pm: 'bun',
+      install: false,
+      git: false,
+    };
+
+    const res = generateProject(ctx);
+    expect(res.targets.length).toBe(1);
+
+    // Root files
+    expect(fs.existsSync(path.join(tmpDir, 'manifest.json'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'package.json'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'README.md'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, '.gitignore'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'icons/16.png'))).toBe(true);
+
+    // No vite / config files
+    expect(fs.existsSync(path.join(tmpDir, 'vite.config.js'))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, 'manifest.config.js'))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, 'targets.config.js'))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, 'jsconfig.json'))).toBe(false);
+
+    // Source files
+    expect(fs.existsSync(path.join(tmpDir, 'src/background.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/content.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/content.css'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/popup/index.html'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/popup/popup.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/popup/popup.css'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/lib/storage.js'))).toBe(true);
+
+    // Check package.json zero-dependency
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, 'package.json'), 'utf-8'));
+    expect(pkg.name).toBe('vanilla-js-ext');
+    expect(pkg.dependencies).toBeUndefined();
+    expect(pkg.devDependencies).toBeUndefined();
+
+    // Check manifest.json contents
+    const manifest = JSON.parse(fs.readFileSync(path.join(tmpDir, 'manifest.json'), 'utf-8'));
+    expect(manifest.manifest_version).toBe(3);
+    expect(manifest.background.service_worker).toBe('src/background.js');
+    expect(manifest.content_scripts[0].js).toContain('src/content.js');
+    expect(manifest.content_scripts[0].css).toContain('src/content.css');
+    expect(manifest.action.default_popup).toBe('src/popup/index.html');
+    expect(manifest.permissions).toContain('storage');
+  });
+
+  it('generates vanilla project with --bundler none --lang ts', () => {
+    const ctx: Context = {
+      projectName: 'vanilla-ts-ext',
+      targetDir: tmpDir,
+      ifExists: 'overwrite',
+      language: 'ts',
+      projectType: 'full',
+      bundler: 'none',
+      browsers: ['chrome'],
+      features: ['background', 'content'],
+      extras: [],
+      contentScript: {
+        matches: ['https://*/*'],
+        runAt: 'document_idle',
+        world: 'ISOLATED',
+        css: false,
+      },
+      pm: 'bun',
+      install: false,
+      git: false,
+    };
+
+    generateProject(ctx);
+
+    expect(fs.existsSync(path.join(tmpDir, 'manifest.json'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'dist/manifest.json'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'tsconfig.json'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/background.ts'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'src/content.ts'))).toBe(true);
+
+    expect(fs.existsSync(path.join(tmpDir, 'vite.config.ts'))).toBe(false);
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, 'package.json'), 'utf-8'));
+    expect(pkg.scripts.build).toBe('tsc');
+    expect(pkg.scripts.dev).toBe('tsc --watch');
+    expect(pkg.devDependencies['typescript']).toBeDefined();
+    expect(pkg.devDependencies['@types/chrome']).toBeDefined();
+    expect(pkg.devDependencies['vite']).toBeUndefined();
+  });
+
+  it('generates vite project explicitly with --bundler vite', () => {
+    const ctx: Context = {
+      projectName: 'vite-explicit-ext',
+      targetDir: tmpDir,
+      ifExists: 'overwrite',
+      language: 'ts',
+      projectType: 'full',
+      bundler: 'vite',
+      browsers: ['chrome'],
+      features: ['background'],
+      extras: [],
+      pm: 'bun',
+      install: false,
+      git: false,
+    };
+
+    generateProject(ctx);
+    expect(fs.existsSync(path.join(tmpDir, 'vite.config.ts'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'manifest.config.ts'))).toBe(true);
+    expect(fs.existsSync(path.join(tmpDir, 'targets.config.ts'))).toBe(true);
+  });
 });
 

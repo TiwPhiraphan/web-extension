@@ -1,5 +1,6 @@
 import type {
   BrowserKey,
+  Bundler,
   ContentScriptRunAt,
   ContentScriptWorld,
   ExtraKey,
@@ -19,6 +20,7 @@ export interface ParsedArgs {
   ifExists?: IfExistsAction;
   lang?: Language;
   type?: ProjectType;
+  bundler?: Bundler;
   browser?: BrowserKey[];
   firefoxMv?: ManifestVersion;
   safariMv?: ManifestVersion;
@@ -41,6 +43,7 @@ export interface ParsedArgs {
 const VALID_BROWSERS = ['chrome', 'firefox', 'safari', 'chromium'];
 const VALID_LANGS = ['ts', 'js', 'typescript', 'javascript'];
 const VALID_TYPES = ['full', 'content-only'];
+const VALID_BUNDLERS: Bundler[] = ['vite', 'none'];
 const VALID_MVS = ['2', '3'];
 const VALID_FEATURES: FeatureKey[] = [
   'background',
@@ -88,6 +91,16 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       i++;
     } else if (arg === '--yes' || arg === '-y') {
       result.yes = true;
+      i++;
+    } else if (arg === '--vanilla') {
+      result.bundler = 'none';
+      result.rawFlags['bundler'] = 'none';
+      result.rawFlags['vanilla'] = true;
+      i++;
+    } else if (arg === '--no-bundler') {
+      result.bundler = 'none';
+      result.rawFlags['bundler'] = 'none';
+      result.rawFlags['noBundler'] = true;
       i++;
     } else if (arg === '--overwrite') {
       result.ifExists = 'overwrite';
@@ -164,6 +177,15 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
           }
           result.type = val.toLowerCase() as ProjectType;
           result.rawFlags['type'] = result.type;
+          break;
+        case 'bundler':
+          if (!VALID_BUNDLERS.includes(val.toLowerCase() as Bundler)) {
+            throw new Error(
+              `Invalid value "${val}" for --bundler. Expected one of: ${VALID_BUNDLERS.join(', ')}`,
+            );
+          }
+          result.bundler = val.toLowerCase() as Bundler;
+          result.rawFlags['bundler'] = result.bundler;
           break;
         case 'browser':
         case 'browsers': {
@@ -347,6 +369,11 @@ export function validateFlagCombinations(args: ParsedArgs): void {
   if (args.safariMv !== undefined && !browsers.includes('safari')) {
     args.warnings.push('--safari-mv specified without Safari target.');
   }
+  if (args.bundler === 'none' && browsers.includes('safari')) {
+    args.warnings.push(
+      'Safari target with vanilla (no-bundler) requires standard manifest and manual conversion using xcrun safari-web-extension-converter.',
+    );
+  }
   if (!isContentOnly && args.features !== undefined && !args.features.includes('content')) {
     if (args.matches !== undefined || args.runAt !== undefined || args.world !== undefined || args.css !== undefined) {
       args.warnings.push('Content script options specified but content feature was not selected.');
@@ -365,6 +392,9 @@ Options:
   --overwrite            Shorthand for --if-exists overwrite
   --lang <ts|js>         Project language: ts (TypeScript) or js (JavaScript) (default: ts)
   --type <type>          Project type: full or content-only (default: full)
+  --bundler <tool>       Build tool: vite, none (default: vite)
+  --vanilla              Shorthand for --bundler none
+  --no-bundler           Alias for --bundler none
   --browser <browsers>   Target browsers: chrome, firefox, safari (default: chrome)
   --firefox-mv <2|3>     Manifest version for Firefox (default: 3)
   --safari-mv <2|3>      Manifest version for Safari (default: 3)

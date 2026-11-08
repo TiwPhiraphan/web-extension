@@ -120,6 +120,44 @@ function expect(actual) {
   };
 }
 
+async function testSuiteVanilla(name, flags) {
+  console.log(`\n================ Running Smoke Suite ${name} (Vanilla) ================`);
+  const tmpDir = path.join(os.tmpdir(), `we-smoke-${name.toLowerCase()}-${Date.now()}`);
+
+  try {
+    const genCmd = `node "${cliPath}" "${tmpDir}" ${flags} --yes --no-install --no-git`;
+    console.log(`[${name}] Generating in ${tmpDir}...`);
+    run(genCmd);
+
+    const manifestFile = path.join(tmpDir, 'manifest.json');
+    if (!fs.existsSync(manifestFile)) {
+      throw new Error(`Manifest not found at ${manifestFile}`);
+    }
+
+    const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf-8'));
+    expect(manifest.manifest_version).toBe(3);
+
+    // Verify all referenced files in manifest exist
+    verifyDist(tmpDir, manifest);
+
+    // Verify no bundler configs exist
+    if (fs.existsSync(path.join(tmpDir, 'vite.config.js')) || fs.existsSync(path.join(tmpDir, 'targets.config.js'))) {
+      throw new Error('Vanilla project must not have vite or targets configs');
+    }
+
+    // Verify package.json zero-dep
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, 'package.json'), 'utf-8'));
+    if (pkg.dependencies || pkg.devDependencies) {
+      throw new Error('Vanilla JS project must have zero dependencies');
+    }
+
+    console.log(`[${name}] Vanilla project verification OK! Unpacked load-ready.`);
+    console.log(`[${name}] SUITE PASSED!`);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+}
+
 async function runAll() {
   await testSuite(
     'A',
@@ -163,7 +201,12 @@ async function runAll() {
     true
   );
 
-  console.log('\n>>> ALL SMOKE TEST SUITES (A, B, C, D, E) PASSED SUCCESSFULLY! <<<');
+  await testSuiteVanilla(
+    'F',
+    '--bundler none --lang js --browser chrome --features background,content',
+  );
+
+  console.log('\n>>> ALL SMOKE TEST SUITES (A, B, C, D, E, F) PASSED SUCCESSFULLY! <<<');
 }
 
 runAll().catch((err) => {

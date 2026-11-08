@@ -17,11 +17,12 @@ src/
 │   └── prompts.ts         Interactive prompts (@clack/prompts) and cancel handling
 ├── generate/
 │   ├── copy.ts            Template file copier, placeholder injector, and file renamer
-│   ├── index.ts           Main project generation coordinator
+│   ├── index.ts           Main project generation coordinator and router
 │   ├── manifest.ts        Manifest V3 and Manifest V2 generator per target browser
 │   ├── pkgjson.ts         Dynamic package.json builder with target dependencies
 │   ├── targets.ts         Browser capability matrix and target resolver
-│   └── tsconfig.ts        TypeScript (tsconfig) and JavaScript (jsconfig) builder
+│   ├── tsconfig.ts        TypeScript (tsconfig) and JavaScript (jsconfig) builder
+│   └── vanilla.ts         Zero-build vanilla extension generator (no bundler)
 └── utils/
     ├── exec.ts            Process execution, git detector, and command checks
     ├── pm.ts              Multi-stage package manager detection heuristics
@@ -33,6 +34,22 @@ templates/
 └── ts/                    TypeScript library utilities
 test/                      Vitest unit test suites
 ```
+
+### 1.1 Dual-Engine Generator Architecture (v2.1.0+)
+
+Starting with v2.1.0, `web-extension` operates a dual-engine architecture:
+
+1. **Vite Engine (`--bundler vite`, Default):**
+   - Coordinates multi-browser compilation targets (Chromium MV3, Firefox MV3/MV2, Safari MV3/MV2).
+   - Generates `vite.config.*`, `manifest.config.*`, and `targets.config.*`.
+   - Uses `@crxjs/vite-plugin` for MV3 targets and `build/mv2.*` rollup runner for MV2 targets.
+   - Provides full HMR, bundling, and multi-mode builds outputting to `dist/<target-id>`.
+
+2. **Vanilla Zero-Build Engine (`--bundler none`, `vanilla.ts`):**
+   - Generates minimal zero-build projects ready for instant "Load unpacked" in Chrome/Chromium.
+   - Places `manifest.json` directly at root (for JS) or `dist/` (for TS).
+   - Guarantees zero runtime or build dependencies in JavaScript mode (`dependencies` and `devDependencies` omitted).
+   - Uses native Web Extension APIs directly without bundler wrappers or ES Module loading issues in content scripts.
 
 ---
 

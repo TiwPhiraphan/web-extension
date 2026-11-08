@@ -1,6 +1,6 @@
 # web-extension
 
-Modern, flexible CLI tool to scaffold cross-browser extensions for Chromium (Chrome, Edge, Brave, Opera), Firefox, and Safari using **Vite** and **CRXJS**.
+Modern, flexible CLI tool to scaffold cross-browser extensions for Chromium (Chrome, Edge, Brave, Opera), Firefox, and Safari using **Vite + CRXJS** or **Zero-Build Vanilla mode**.
 
 ---
 
@@ -13,11 +13,12 @@ Modern, flexible CLI tool to scaffold cross-browser extensions for Chromium (Chr
 
 ## Features
 
-- **Vite + CRXJS:** Ultra-fast bundling, live reloading, and HMR (Hot Module Replacement) where supported.
+- **Dual Engine / Optional Bundler:** Choose between modern **Vite + CRXJS** (HMR, TypeScript, bundling) or lightweight **Zero-Build Vanilla mode** (direct "Load unpacked" without build steps).
 - **Cross-Browser:** Supports Chromium (MV3), Firefox (MV3 & MV2), and Safari (MV3 & MV2).
 - **Modular Components:** Choose only what you need (Background service worker, Content scripts, Popup, Options page, Side panel, DevTools page, New Tab override, declarativeNetRequest rules).
 - **Content-Script Only Mode:** Purpose-built mode for DOM scrapers and injectors without unnecessary UI files.
 - **Automatic Type & Package Setup:** Installs browser-specific types (`@types/chrome`, `@types/firefox-webext-browser`) and auto-configures TypeScript (`tsconfig`) or JavaScript (`jsconfig`).
+- **Zero-Dependency Guarantee:** Vanilla JS mode generates clean, zero-dependency projects that run immediately.
 - **Smart Package Manager Detection:** Automatically detects whether you ran via `bun`, `pnpm`, `npm`, or `yarn`.
 
 ---
@@ -61,6 +62,7 @@ Every interactive prompt has a corresponding CLI flag to enable scripted and non
 | 1 | Project name | `[dir]`, `--name <string>` | Target directory and npm package name | `my-extension` |
 | 1b | Directory not empty | `--if-exists <action>`, `--overwrite` | `cancel`, `overwrite`, `merge` | `cancel` |
 | 2 | Language | `--lang <ts\|js>` | `ts` (TypeScript), `js` (JavaScript) | `ts` |
+| 2b | Build tool / Bundler | `--bundler <vite\|none>`, `--vanilla`, `--no-bundler` | `vite`, `none` | `vite` |
 | 3 | Project type | `--type <full\|content-only>` | `full`, `content-only` | `full` |
 | 4 | Target browsers | `--browser <browsers>` | `chrome`, `firefox`, `safari` (comma-separated or repeated) | `chrome` |
 | 5 | Manifest version (Firefox) | `--firefox-mv <2\|3>` | `2`, `3` | `3` |
@@ -106,6 +108,12 @@ web-extension dom-injector --type content-only --browser chrome,firefox \
 web-extension multi-browser-ext --lang ts --browser chrome,firefox,safari \
   --firefox-mv 3 --safari-mv 2 --features background,content,popup --yes
 ```
+
+### 5. Zero-Build Vanilla JavaScript Extension
+```bash
+web-extension my-vanilla-ext --bundler none --lang js --yes
+```
+Load the `my-vanilla-ext/` folder directly in `chrome://extensions` via **Load unpacked** — zero dependencies, zero build step!
 
 ---
 
