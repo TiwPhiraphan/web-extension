@@ -18,11 +18,11 @@ function getCliVersion(): string {
     const pkgPath = path.resolve(__dirname, '../package.json');
     if (fs.existsSync(pkgPath)) {
       const data = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-      return data.version || '0.1.0';
+      return data.version || '2.0.0';
     }
   } catch {
   }
-  return '0.1.0';
+  return '2.0.0';
 }
 
 async function main(): Promise<void> {
