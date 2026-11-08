@@ -5,12 +5,22 @@
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "web-extension": "./dist/index.js"
+    "web-extension": "dist/index.js"
   },
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "AI.md",
+    "DEVELOPER.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TiwPhiraphan/web-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TiwPhiraphan/web-extension/issues"
+  },
+  "homepage": "https://github.com/TiwPhiraphan/web-extension#readme",
   "engines": {
     "node": ">=20"
   },
@@ -44,4 +54,3 @@
     "vitest": "^5.1.0"
   }
 }
-
