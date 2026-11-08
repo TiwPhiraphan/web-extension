@@ -72,6 +72,8 @@
 | ฟีเจอร์ที่เลือกได้ | background, content script, popup, options, side panel, declarativeNetRequest rules, devtools page, new tab override, และอื่นๆ (extras ในหัวข้อ 5) |
 | ชื่อ package / CLI | `web-extension` (repo: https://github.com/TiwPhiraphan/web-extension) |
 | เรียก `web-extension` โดยไม่มี subcommand | ทำงานเหมือน `web-extension init` (ดูหัวข้อ 0.1) |
+| ตรวจ package manager | ผู้ใช้รันผ่าน `bunx` ให้ใช้ bun, `pnpm dlx` ใช้ pnpm ฯลฯ และต้องมีวิธีจัดการกรณีติดตั้ง CLI แบบ global (ดูหัวข้อ 12) |
+| Flag ของ prompt | **ทุกคำถาม** ต้องมี flag ไว้ข้ามคำถาม เช่น `--browser chrome\|firefox` (ดูหัวข้อ 6) |
 | ภาษาของ CLI | TypeScript |
 | วิธีรัน | ต้องรองรับ npx / bunx / **bun x** และต้องเขียนไว้ใน README (ดูหัวข้อ 15) |
 | ภาษาของโปรเจกต์ที่ generate | เลือกได้ TS หรือ JS |
@@ -123,18 +125,21 @@ crxjs เน้น MV3 ดังนั้นเมื่อ user เลือก
 
 อ่าน README ของเวอร์ชัน `@clack/prompts` ที่ติดตั้งจริงก่อนเรียกใช้ signature อาจเปลี่ยน
 
+**ทุกคำถามในตารางนี้ต้องมี flag คู่กัน** (ตารางจับคู่อยู่ในหัวข้อ 6.1) ถ้าผู้ใช้ส่ง flag ของคำถามไหนมา ให้ข้ามเฉพาะคำถามนั้น ห้ามเพิ่ม prompt ใหม่ในอนาคตโดยไม่เพิ่ม flag คู่กัน
+
 | # | Prompt | ชนิด | ตัวเลือก / ค่าเริ่มต้น | เงื่อนไข |
 |---|---|---|---|---|
 | 1 | Project name | `text` | default `my-extension` | validate: ไม่ว่าง, เป็นชื่อ npm ที่ถูกต้อง (พิมพ์เล็ก ไม่มีช่องว่าง) และถ้าเป็น path ให้ใช้ basename เป็นชื่อ package |
 | 1b | Directory not empty | `select` | Cancel / Overwrite / Merge | แสดงเมื่อโฟลเดอร์ปลายทางมีไฟล์อยู่แล้ว |
 | 2 | Language | `select` | TypeScript (default) / JavaScript | |
 | 3 | Project type | `select` | **Full extension** / **Content script only** | ถ้าเลือก content only ข้ามไปข้อ 7 |
-| 4 | Target browsers | `multiselect` (required, อย่างน้อย 1) | `Chromium (Chrome, Edge, Brave, Opera)` / `Firefox` / `Safari` | default เลือก Chromium |
+| 4 | Target browsers | `multiselect` (required, อย่างน้อย 1) | `Chromium (Chrome, Edge, Brave, Opera)` (value `chrome`) / `Firefox` (value `firefox`) / `Safari` (value `safari`) | default เลือก Chromium (`chrome`) |
 | 5 | Manifest version ของ Firefox | `select` | MV3 (recommended) / MV2 | แสดงเมื่อเลือก Firefox |
 | 5b | Manifest version ของ Safari | `select` | MV3 (recommended) / MV2 | แสดงเมื่อเลือก Safari |
 | 6 | Features | `multiselect` | ดูตารางด้านล่าง | เฉพาะ Full extension |
 | 7 | Content script options | ชุดย่อย | ดูด้านล่าง | แสดงเสมอถ้ามี content script (บังคับในโหมด content only) |
 | 8 | Extras | `multiselect` (ไม่บังคับ) | ดูด้านล่าง | เฉพาะ Full extension |
+| 9a | Package manager | `select` | npm / pnpm / yarn / bun โดย `initialValue` = ผลการตรวจจับ | แสดงเฉพาะเมื่อการตรวจจับไม่มั่นใจ (`confident: false` ดูหัวข้อ 12) และมี TTY และไม่ได้ส่ง `--pm` |
 | 9 | Install dependencies? | `confirm` | default yes | |
 | 10 | Init git repository? | `confirm` | default yes | ข้ามถ้าอยู่ใน git repo อยู่แล้ว |
 
@@ -180,34 +185,96 @@ crxjs เน้น MV3 ดังนั้นเมื่อ user เลือก
 
 ---
 
-## 6. Flags สำหรับโหมด non-interactive (จำเป็นสำหรับเทสอัตโนมัติ)
+## 6. Flags สำหรับโหมด non-interactive (ทุก prompt ต้องมี flag คู่กัน)
 
-ถ้าส่ง flag ครบ ไม่ต้องถาม prompt ที่ถูกระบุแล้ว
+**หลักการ (ผู้ใช้ยืนยันแล้ว):** ทุกคำถามในหัวข้อ 5 ต้องมี flag ที่ตอบแทนได้ ถ้าส่ง flag ของคำถามไหนมา ให้ **ข้ามเฉพาะคำถามนั้น**
+
+- คำถามที่ยังไม่ได้ตอบ และเงื่อนไขยังเข้าข่าย ยังต้องถามตามปกติ โดยเงื่อนไขคำนวณจากค่าที่ส่งมาแล้ว เช่น `--browser firefox` จะข้ามข้อ 4 แต่ยังถามข้อ 5 (Firefox MV) ถ้าไม่ได้ส่ง `--firefox-mv`
+- ถ้า flag ครบจนไม่มีคำถามเหลือ ก็ไม่ต้องถามอะไรเลย (ยังแสดง intro/outro ตามปกติ)
+- ลำดับความสำคัญ: **flag > ค่า default ของ `--yes` > prompt**
+
+### 6.1 ตารางจับคู่ prompt กับ flag
+
+| # | Prompt | Flag | ค่าที่รับ | ค่า default เมื่อใช้ `--yes` |
+|---|---|---|---|---|
+| 1 | Project name | `[dir]` (positional) และ `--name <string>` | `[dir]` = โฟลเดอร์ปลายทาง, `--name` = ชื่อ package (ไม่ส่งให้ใช้ basename ของ `[dir]`) | `my-extension` |
+| 1b | Directory not empty | `--if-exists <cancel\|overwrite\|merge>` และ `--overwrite` (= `--if-exists overwrite`) | | `cancel` (error, exit 1) |
+| 2 | Language | `--lang <ts\|js>` | รับ `typescript` / `javascript` เป็น alias | `ts` |
+| 3 | Project type | `--type <full\|content-only>` | | `full` |
+| 4 | Target browsers | `--browser <chrome\|firefox\|safari>` | ส่งหลายค่าได้ทั้งแบบคั่น comma (`--browser chrome,firefox`) และแบบซ้ำ (`--browser chrome --browser firefox`) ดูหมายเหตุด้านล่าง | `chrome` |
+| 5 | Manifest version ของ Firefox | `--firefox-mv <2\|3>` | | `3` |
+| 5b | Manifest version ของ Safari | `--safari-mv <2\|3>` | | `3` |
+| 6 | Features | `--features <list\|none>` | `background,content,popup,options,sidepanel,dnr,devtools,newtab` (`none` = เลือกว่าง ต่างจากการไม่ส่ง flag) | `background,content` |
+| 7 | Content script: matches | `--matches <pattern[,pattern]>` | | `https://*/*` |
+| 7 | Content script: run_at | `--run-at <document_start\|document_end\|document_idle>` | | `document_idle` |
+| 7 | Content script: world | `--world <ISOLATED\|MAIN>` | | `ISOLATED` |
+| 7 | Content script: css | `--css` / `--no-css` | | `--css` |
+| 8 | Extras | `--extras <list\|none>` | `contextmenu,commands,omnibox,storage` | `none` |
+| 9a | Package manager | `--pm <npm\|pnpm\|yarn\|bun>` | | ผลการตรวจ (หัวข้อ 12) |
+| 9 | Install dependencies? | `--install` / `--no-install` | | `--install` |
+| 10 | Init git repository? | `--git` / `--no-git` | | `--git` (ถ้าอยู่ใน git repo อยู่แล้ว ข้ามพร้อม warning ไม่ถือเป็น error) |
+
+หมายเหตุเรื่อง `--browser`:
+
+- key ของ browser ที่ใช้ทั้งโปรเจกต์คือ `chrome`, `firefox`, `safari` โดย **`chrome` หมายถึงทุก browser ตระกูล Chromium** (Chrome, Edge, Brave, Opera) ซึ่งใช้ build เดียวกัน (`dist/chrome-mv3`)
+- รับ `chromium` เป็น alias ของ `chrome` และรับ `--browsers` เป็น alias ของ `--browser` (ไม่ต้องแสดงใน `--help`)
+- ค่าซ้ำให้ตัดซ้ำเงียบๆ ไม่ error
+
+### 6.2 รูปแบบคำสั่งและ flag ทั้งหมด
 
 ```
-web-extension init [dir]
+web-extension [init] [dir] [options]
+
   --name <string>
+  --if-exists <cancel|overwrite|merge>
+  --overwrite
   --lang <ts|js>
   --type <full|content-only>
-  --browsers <chromium,firefox,safari>      # คั่นด้วย comma
-  --firefox-mv <2|3>                        # default 3
-  --safari-mv <2|3>                         # default 3
-  --features <background,content,popup,options,sidepanel,dnr,devtools,newtab>
-  --extras <contextmenu,commands,omnibox,storage>
+  --browser <chrome|firefox|safari>         # ส่งหลายค่าได้
+  --firefox-mv <2|3>
+  --safari-mv <2|3>
+  --features <list|none>
   --matches <pattern[,pattern]>
   --run-at <document_start|document_end|document_idle>
   --world <ISOLATED|MAIN>
-  --no-css
+  --css / --no-css
+  --extras <list|none>
+  --pm <npm|pnpm|yarn|bun>                  # override การตรวจจับ (หัวข้อ 12)
   --install / --no-install
   --git / --no-git
-  --pm <npm|pnpm|yarn|bun>                  # override การตรวจจับ
-  --yes, -y                                  # ใช้ default ทุกอย่างที่ไม่ได้ส่งมา
-  --overwrite
+  --yes, -y                                 # ใช้ default (ตาราง 6.1) กับทุกคำถามที่ไม่ได้ส่ง flag
   --help, -h
   --version, -v
 ```
 
-validate ทุก flag ถ้าค่าผิดให้ error ชัดเจนพร้อมรายการค่าที่ถูกต้อง แล้ว `exit 1`
+`--help` ต้องแสดงทุก flag ข้างบนพร้อมค่าที่รับและ default (ไม่นับ alias ที่ระบุว่าซ่อน)
+
+### 6.3 กฎการตรวจสอบ flag
+
+**ค่าผิดรูปแบบ:** ค่าที่ไม่อยู่ในรายการ (เช่น `--browser edge`) → error ข้อความชัดเจนพร้อมรายการค่าที่ถูกต้อง แล้ว `exit 1` ไม่ถามต่อ
+
+**ชุด flag ที่เป็นไปไม่ได้ → error (`exit 1`)** เพื่อไม่ให้ generate ผิดจากที่ผู้ใช้สั่งโดยเงียบๆ:
+
+- `--type content-only` ร่วมกับ `--features` หรือ `--extras`
+- `--features` มี `sidepanel` แต่ browser ที่เลือกมีแค่ `safari`
+- `--features` มี `dnr` ขณะที่มี target ที่เป็น MV2 (จนกว่าจะ verify ตามหัวข้อ 3 ข้อ 4)
+- `--extras` มี `contextmenu`, `commands` หรือ `omnibox` แต่ไม่มี `background` ใน features
+- `--world MAIN` ขณะที่มี target ที่เป็น MV2
+
+**ชุด flag ที่ไม่มีผล → warning แล้วเดินต่อ (ไม่ error):**
+
+- `--firefox-mv` โดยไม่ได้เลือก firefox, `--safari-mv` โดยไม่ได้เลือก safari
+- `--matches`, `--run-at`, `--world`, `--css`/`--no-css` ขณะที่ไม่มี content script (full extension ที่ไม่มี `content` ใน features)
+- `--git` ขณะที่อยู่ใน git repo อยู่แล้ว
+
+ความต่างกับ prompt: ใน prompt ตัวเลือกที่เป็นไปไม่ได้ถูก **ซ่อน** (หัวข้อ 5) แต่กับ flag ต้อง **ปฏิเสธ** เพราะผู้ใช้สั่งมาตรงๆ
+
+### 6.4 พฤติกรรมเมื่อไม่มี TTY (CI, pipe)
+
+- ถ้า stdin หรือ stdout ไม่ใช่ TTY และไม่ได้ส่ง `--yes` และยังมีคำถามที่ไม่ได้ตอบ → **error `exit 1` พร้อมรายการ flag ที่ขาด** ห้ามค้างรอ input
+- ถ้าส่ง `--yes` ใช้ default ตามตาราง 6.1 กับทุกข้อที่ไม่ได้ส่ง
+- โฟลเดอร์ปลายทางไม่ว่างและไม่ได้ส่ง `--if-exists`/`--overwrite` ในโหมดนี้ → `cancel` (error) เพราะปลอดภัยที่สุด
+- การตรวจ package manager ในโหมดนี้ **ไม่ถามเพิ่ม** ใช้ผลที่ตรวจได้ แล้วพิมพ์บรรทัดแจ้งว่าใช้ตัวไหนและมาจากสัญญาณอะไร (ดูหัวข้อ 12)
 
 ---
 
@@ -233,7 +300,7 @@ web-extension/                   # repo เดิม ถ้ามีไฟล์
 │   │   ├── tsconfig.ts          # ประกอบ tsconfig/jsconfig (หัวข้อ 10)
 │   │   └── targets.ts           # นิยาม target id และ capability matrix
 │   └── utils/
-│       ├── pm.ts                # ตรวจ package manager
+│       ├── pm.ts                # ตรวจ package manager (หัวข้อ 12)
 │       ├── validate.ts
 │       └── exec.ts              # รัน install / git init
 ├── templates/                   # ถูกแพ็กไปกับ npm package (ต้องอยู่ใน "files")
@@ -279,9 +346,11 @@ web-extension/                   # repo เดิม ถ้ามีไฟล์
 
 `targets.ts` ต้องเป็นแหล่งความจริงเดียว
 
-target id = `<browser>-mv<n>` ได้แก่ `chromium-mv3`, `firefox-mv3`, `firefox-mv2`, `safari-mv3`, `safari-mv2`
+target id = `<browser>-mv<n>` ได้แก่ `chrome-mv3`, `firefox-mv3`, `firefox-mv2`, `safari-mv3`, `safari-mv2`
 
-| ฟีเจอร์ | chromium-mv3 | firefox-mv3 | firefox-mv2 | safari-mv3 | safari-mv2 |
+key ของ browser คือ `chrome` / `firefox` / `safari` (ตรงกับค่าของ `--browser`) โดย `chrome` ครอบคลุมทุก browser ตระกูล Chromium (Chrome, Edge, Brave, Opera) และ script ที่ generate ใช้ชื่อตาม key เช่น `dev:chrome`, `build:firefox`
+
+| ฟีเจอร์ | chrome-mv3 | firefox-mv3 | firefox-mv2 | safari-mv3 | safari-mv2 |
 |---|---|---|---|---|---|
 | background | `service_worker` | `scripts` | `scripts` (`persistent:false`) | ตรวจเอง (หัวข้อ 3) | `scripts` |
 | content script | ใช่ | ใช่ | ใช่ (IIFE) | ใช่ | ใช่ (IIFE) |
@@ -317,13 +386,13 @@ target id = `<browser>-mv<n>` ได้แก่ `chromium-mv3`, `firefox-mv3`, 
   - `storage` ← extra `storage`
   - `contextMenus` ← extra `contextmenu`
   - `declarativeNetRequest` (+ `declarativeNetRequestFeedback` ห้ามใส่เว้นแต่ต้องใช้) ← feature `dnr`
-  - `sidePanel` ← feature `sidepanel` บน chromium
+  - `sidePanel` ← feature `sidepanel` บน chrome
   - `host_permissions` (MV3) ← ใส่เมื่อมี DNR (ต้องมี host ที่ rule ใช้) ค่าเริ่มต้น `["<all_urls>"]` พร้อมคอมเมนต์ใน README ว่าควรแคบลง
 
-### MV3 (chromium, firefox, safari)
+### MV3 (chrome, firefox, safari)
 
 - `manifest_version: 3`
-- background: ดูตาราง (หัวข้อ 8) chromium ใช้ `{ "service_worker": "src/background/index.ts", "type": "module" }`
+- background: ดูตาราง (หัวข้อ 8) chrome ใช้ `{ "service_worker": "src/background/index.ts", "type": "module" }`
 - firefox-mv3 ต้องมี `browser_specific_settings.gecko`:
   - `id`: `{{slug}}@example.com` (placeholder และต้องบอกใน README ว่าต้องเปลี่ยนก่อน publish)
   - `strict_min_version`: ตรวจจาก MDN ว่า MV3 + ฟีเจอร์ที่ใช้ต้องการเวอร์ชันขั้นต่ำเท่าไรแล้วใส่ ห้ามเดาตัวเลข
@@ -447,7 +516,7 @@ my-extension/
 
 ### การเลือก target ด้วย mode
 
-- mode = target id (`chromium-mv3`, `firefox-mv3`, `firefox-mv2`, ...)
+- mode = target id (`chrome-mv3`, `firefox-mv3`, `firefox-mv2`, ...)
 - `vite.config` อ่าน `mode` → หา target → ถ้า `mv === 3` ใช้ `crx({ manifest, browser: browser === 'firefox' ? 'firefox' : 'chrome' })` ถ้า `mv === 2` เรียก `build/mv2`
 - `outDir`: `dist/<target id>`
 - manifest สร้างจากฟังก์ชันที่รับ target id ใช้ `defineManifest` ของ crxjs ในกรณี MV3
@@ -497,20 +566,84 @@ export default defineConfig(({ mode }) => {
 8. (ถ้าเลือก) git init → install dependencies ด้วย package manager ที่ตรวจเจอ แสดง `p.spinner()`
 9. พิมพ์ `p.outro` พร้อม next steps ที่ใช้คำสั่งตาม package manager (`cd <dir>`, `<pm> run dev:<browser>`) และวิธีโหลด extension ของแต่ละ browser
 
-### การตรวจ package manager
+### การตรวจ package manager (สเปกของ `utils/pm.ts`)
+
+เป้าหมาย: ผู้ใช้รันผ่าน `bunx` ต้องได้ `bun`, รันผ่าน `pnpm dlx` ต้องได้ `pnpm` ฯลฯ และต้องจัดการกรณีที่ผู้ใช้ **ติดตั้ง CLI แบบ global** แล้วเรียก `web-extension init` ตรงๆ ด้วย
+
+**ที่มาของปัญหา:** ตอนรันผ่าน `npx`, `pnpm dlx`, `yarn dlx`, `bunx` หรือ `bun x` ตัว package manager มักตั้ง environment variable `npm_config_user_agent` ให้ แต่ตอนรัน global bin จาก shell ตรงๆ ไม่มีตัวกลางมาตั้งค่านี้ ต้องหาสัญญาณอื่นแทน (ข้อความนี้เป็นสมมติฐาน ให้พิสูจน์ด้วยการรันจริงตามหัวข้อ "ต้องตรวจเองก่อนเขียนโค้ด" ด้านล่าง)
+
+#### ชนิดข้อมูล
 
 ```ts
-const ua = process.env.npm_config_user_agent ?? '';
-// ขึ้นต้นด้วย 'pnpm' | 'yarn' | 'bun' | 'npm' ถ้าไม่ตรงให้ใช้ npm
+type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
+
+type PmSource =
+  | 'flag' | 'user-agent' | 'package-json' | 'lockfile'
+  | 'global-path' | 'runtime' | 'prompt' | 'default';
+
+interface PmResult {
+  name: PackageManager;
+  source: PmSource;
+  confident: boolean; // false = ควรถามผู้ใช้ (ถ้ามี TTY)
+}
 ```
 
-- Install: `npm install`, `pnpm install`, `yarn`, `bun install`
-- Run script ใน next steps: `npm run X`, `pnpm X`, `yarn X`, `bun run X`
+เขียน `detectPackageManager(input): PmResult` ให้รับ `{ flag, env, argv1, cwd, targetDir, versions, fs }` เป็น parameter เพื่อให้ทดสอบได้โดยไม่ต้องรัน package manager จริง
+
+#### ลำดับสัญญาณ (หยุดที่ตัวแรกที่ตรวจเจอ)
+
+| ลำดับ | สัญญาณ | ผลลัพธ์ | confident |
+|---|---|---|---|
+| 1 | `--pm <name>` | ตามที่ส่งมา | ใช่ |
+| 2 | `process.env.npm_config_user_agent` ขึ้นต้นด้วย `npm/`, `pnpm/`, `yarn/` หรือ `bun/` | ตามนั้น (ครอบคลุม `npx`, `pnpm dlx`, `yarn dlx`, `bunx`, `bun x`) | ใช่ |
+| 3 | field `packageManager` ใน `package.json` ที่ใกล้ที่สุด เริ่มจากโฟลเดอร์ปลายทางแล้วไล่ขึ้น parent (รูปแบบ corepack `name@version`, รับเฉพาะ 4 ชื่อข้างบน) | ตามนั้น | ใช่ |
+| 4 | lockfile ในโฟลเดอร์ปลายทาง แล้วไล่ขึ้น parent จนถึง root ของ git repo หรือ root ของ filesystem เจอโฟลเดอร์แรกที่มี lockfile ให้หยุด | `bun.lock`/`bun.lockb` → bun, `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json`/`npm-shrinkwrap.json` → npm | ใช่ ถ้ามี lockfile เดียวในโฟลเดอร์นั้น, **ไม่** ถ้ามีหลายชนิดปนกัน (เลือกตามลำดับ bun, pnpm, yarn, npm แล้ว `confident: false`) |
+| 5 | **ติดตั้งแบบ global:** `fs.realpathSync(process.argv[1])` แล้วแปลง `\` เป็น `/` และเทียบแบบไม่สนตัวพิมพ์กับ pattern ของ global directory ของแต่ละตัว | ตัวที่ pattern ตรง | **ไม่** (ติดตั้ง CLI ด้วยตัวไหนไม่ได้แปลว่าโปรเจกต์ใช้ตัวนั้น จึงถามยืนยัน โดยตั้ง default เป็นตัวที่เดาได้) |
+| 6 | `process.versions.bun` มีค่า (รันภายใต้ runtime ของ Bun) | bun | ไม่ |
+| 7 | ไม่มีสัญญาณเลย (รวมถึง global ของ npm ที่ path ไม่ต่างจาก node_modules ทั่วไป) | npm | ไม่ |
+
+หมายเหตุ:
+
+- ข้อ 2 อยู่เหนือข้อ 3 - 4 ตามที่ผู้ใช้ต้องการ: ถ้าผู้ใช้เรียกผ่าน `bunx` ให้ได้ bun แม้ parent มี `pnpm-lock.yaml`
+- ห้ามเปลี่ยน shebang ของ `dist/index.js` เป็น `#!/usr/bin/env bun` เพราะผู้ใช้ที่ไม่มี Bun จะรันไม่ได้ ให้คง `#!/usr/bin/env node` (ซึ่งหมายความว่าสัญญาณข้อ 6 จะพบได้น้อย ถ้ายืนยันจากการทดสอบว่า `bunx` รัน script ด้วย node)
+- ข้อ 5 pattern เริ่มต้นที่ **ต้องพิสูจน์ก่อนใช้** (ห้ามคัดลอกไปใช้โดยไม่ตรวจ): bun → `/.bun/install/global/`, pnpm → `/pnpm/global/`, yarn (classic) → `/yarn/global/` หรือ `/.config/yarn/global/` (Windows ใช้ path คนละแบบ) ส่วน npm ไม่มี pattern เฉพาะ
+
+#### UX เมื่อตรวจได้แล้ว
+
+- ทุกครั้งให้พิมพ์บรรทัดเดียว เช่น `p.log.info('Using bun (detected from user agent)')` โดยแปลง `source` เป็นข้อความที่คนอ่านรู้เรื่อง
+- ถ้า `confident === false` และมี TTY และไม่ได้ส่ง `--pm` → ถามคำถามข้อ 9a (`select` 4 ตัวเลือก ตั้ง `initialValue` เป็นผลที่เดาได้)
+- ถ้า `confident === false` และไม่มี TTY หรือใช้ `--yes` → ใช้ผลที่เดาได้ต่อเลย แต่ต้องพิมพ์บรรทัดแจ้งพร้อมบอกว่าใช้ `--pm` เพื่อเปลี่ยนได้
+- ผลที่ได้ใช้กับ 3 อย่าง: คำสั่ง install, คำสั่ง run script ใน next steps (outro) และข้อความใน README ที่ generate
+
+#### คำสั่งตาม package manager
+
+| | install | run script (ใน next steps) |
+|---|---|---|
+| npm | `npm install` | `npm run <script>` |
+| pnpm | `pnpm install` | `pnpm <script>` |
+| yarn | `yarn` (ใช้ได้ทั้ง classic และ berry) | `yarn <script>` |
+| bun | `bun install` | `bun run <script>` |
+
+- ก่อน install ให้เช็กว่า package manager ที่เลือกมีอยู่ใน PATH จริง (รัน `<pm> --version`) ถ้าไม่มี → warning, ข้ามขั้น install, และพิมพ์คำสั่งให้ผู้ใช้รันเอง (ห้าม fallback ไปใช้ npm เองโดยไม่บอก)
+- Windows: `npm`, `pnpm`, `yarn`, `bun` อาจเป็นไฟล์ `.cmd` ต้องเรียกผ่าน `cross-spawn` หรือ `spawn` แบบ `shell: true` อย่างปลอดภัย (ส่ง argument แบบ array ไม่ต่อ string จากข้อมูลผู้ใช้) ให้ทดสอบบน Windows จริง
 - ถ้า install ล้มเหลว ห้ามลบโปรเจกต์ที่ generate แล้ว ให้ warning และบอกให้ user ลงเองด้วยคำสั่งที่พิมพ์ให้
+
+#### ต้องตรวจเองก่อนเขียนโค้ด (บันทึกผลเป็นตารางใน `NOTES.md`)
+
+รัน CLI เวอร์ชันทดลองที่พิมพ์ค่าต่อไปนี้ออกมา: `process.env.npm_config_user_agent`, `process.argv[1]`, `fs.realpathSync(process.argv[1])`, `process.versions.bun`, `process.execPath` ในทุกวิธีรันดังนี้ และถ้าทำได้ให้ทดสอบทั้ง Linux/macOS และ Windows:
+
+1. `npx web-extension`
+2. `pnpm dlx web-extension`
+3. `yarn dlx web-extension` (Yarn 2+)
+4. `bunx web-extension`
+5. `bun x web-extension`
+6. ติดตั้ง global ด้วย `npm i -g`, `pnpm add -g`, `bun add -g`, `yarn global add` (classic) แล้วเรียก `web-extension init` ตรงๆ
+
+จากผลที่ได้ให้ยืนยันหรือแก้: (ก) `bunx` และ `bun x` ตั้ง `npm_config_user_agent` เป็น `bun/...` จริงไหม (ข) pattern ของ global path ของแต่ละตัวในแต่ละ OS (ค) `bunx` รัน CLI ด้วย node หรือ bun ถ้าผลต่างจากสมมติฐานในหัวข้อนี้ **ให้แก้ตาราง "ลำดับสัญญาณ" ตามผลจริง และลงรายการในไฟล์ `NOTES.md`** ห้ามเดาต่อ
 
 ### วิธีโหลด extension (ใส่ใน outro และ README ที่ generate)
 
-- Chromium: `chrome://extensions` → Developer mode → Load unpacked → เลือก `dist/chromium-mv3`
+- Chromium: `chrome://extensions` → Developer mode → Load unpacked → เลือก `dist/chrome-mv3`
 - Firefox: `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → เลือก `manifest.json` ใน dist หรือใช้ `run:firefox`
 - Safari: ต้องมี Xcode แล้วรัน `xcrun safari-web-extension-converter dist/<target id>` (แค่บอกวิธี ไม่ต้องรันให้)
 
@@ -585,8 +718,9 @@ web-extension init
 ส่วนอื่นของ README:
 
 - คำอธิบายสั้นๆ ว่าทำอะไร และ browser/MV ที่รองรับ
-- รายการ prompt ทั้งหมด และตาราง flags (หัวข้อ 6)
-- ตัวอย่างคำสั่ง non-interactive 2 - 3 แบบ (chromium ts, firefox mv2 js, content-only)
+- รายการ prompt ทั้งหมด และตาราง flags ที่จับคู่กับทุก prompt (หัวข้อ 6.1) พร้อมกฎ error/warning ของ flag และพฤติกรรมเมื่อไม่มี TTY (หัวข้อ 6.3 - 6.4)
+- ส่วนอธิบายการตรวจ package manager: ลำดับสัญญาณ, กรณีติดตั้งแบบ global, และวิธี override ด้วย `--pm` (หัวข้อ 12)
+- ตัวอย่างคำสั่ง non-interactive 2 - 3 แบบ (chrome ts, firefox mv2 js, content-only)
 - ระบุว่า `web-extension` เฉยๆ เท่ากับ `web-extension init`
 - ตารางว่าฟีเจอร์ไหนรองรับ browser/MV ไหน (ตาม capability matrix)
 - ข้อจำกัดที่ทราบ (เช่น Firefox dev ไม่มี HMR ถ้ายืนยันแล้วว่าเป็นเช่นนั้น, Safari ต้องแปลงด้วย Xcode)
@@ -609,22 +743,37 @@ web-extension init
 
 - `manifest.ts`: ทุก target id × ชุดฟีเจอร์ที่สำคัญ (ทุกฟีเจอร์ / ไม่มีฟีเจอร์ / content-only) ต้องได้ manifest ที่:
   - `manifest_version` ตรงกับ target
-  - มี key ที่ตาม capability matrix เท่านั้น (เช่น chromium ไม่มี `sidebar_action`, firefox ไม่มี `side_panel`)
+  - มี key ที่ตาม capability matrix เท่านั้น (เช่น chrome ไม่มี `sidebar_action`, firefox ไม่มี `side_panel`)
   - MV2 ไม่มี `action`/`host_permissions`/`declarative_net_request`
   - firefox ทุก MV มี `browser_specific_settings.gecko.id`
 - `validate.ts`: ชื่อโปรเจกต์ และ pattern ของ `matches`
-- `pm.ts`: ตรวจ user agent ทั้ง 4 ตัว + กรณีว่าง
+- `pm.ts` (ทดสอบ `detectPackageManager` โดยส่ง env/argv/fs จำลองเข้าไป ไม่รัน package manager จริง):
+  - user agent ทั้ง 4 ตัว (`npm/`, `pnpm/`, `yarn/`, `bun/`) ต้องได้ตัวนั้นและ `confident: true`
+  - user agent ต้องชนะ lockfile/`packageManager` (เช่น user agent เป็น `bun/` แต่ parent มี `pnpm-lock.yaml` ต้องได้ bun)
+  - `--pm` ต้องชนะทุกสัญญาณ
+  - ไม่มี user agent: `packageManager` field → lockfile ทีละชนิด → หลาย lockfile ปนกัน (`confident: false`) → ไล่ขึ้น parent directory
+  - global path ของ bun/pnpm/yarn ทั้ง path แบบ `/` และ `\` ต้องได้ `source: 'global-path'` และ `confident: false` (ใช้ pattern ที่ยืนยันแล้วใน `NOTES.md`)
+  - ไม่มีสัญญาณเลย → npm, `confident: false`
+  - ค่า user agent แปลกๆ หรือว่าง ต้องไม่ throw
+- flags (`args.ts` + `prompts.ts`):
+  - ส่ง flag ครบทุกข้อพร้อม `--yes` ต้องไม่เรียก prompt ใดเลย (mock `@clack/prompts` แล้ว assert ว่าไม่มีการเรียก)
+  - ส่ง flag บางข้อ ต้องข้ามเฉพาะข้อนั้นและยังถามข้อที่เหลือที่เข้าเงื่อนไข (เช่น `--browser firefox` ต้องยังถามข้อ 5 ถ้าไม่ส่ง `--firefox-mv`)
+  - `--browser chrome,firefox` และ `--browser chrome --browser firefox` ต้องให้ผลเท่ากัน, `chromium` ต้องเป็น alias ของ `chrome`, ค่าซ้ำต้องไม่ error
+  - ค่านอกรายการต้อง error `exit 1` พร้อมรายการค่าที่ถูกต้อง
+  - ชุด flag ที่เป็นไปไม่ได้ทุกข้อในหัวข้อ 6.3 ต้อง error และชุดที่ไม่มีผลต้อง warning
+  - ไม่มี TTY และไม่มี `--yes` และมีคำถามค้าง ต้อง error พร้อมรายการ flag ที่ขาด ไม่ค้างรอ input
+  - `--help` ต้องแสดงทุก flag ในหัวข้อ 6.2
 - `args.ts`: `web-extension my-app --yes` ต้องได้ผลเหมือน `web-extension init my-app --yes`, argument แรกที่เป็นชื่อ subcommand ต้องไปที่ subcommand นั้น และ `--help`/`--version` ที่ระดับบนสุดต้องไม่เข้า `init`
 
 ### Smoke test (generate จริงลง temp dir แล้ว build)
 
 | ชุด | flags |
 |---|---|
-| A | `--lang ts --browsers chromium --features background,content,popup,options,sidepanel,dnr,devtools,newtab --extras contextmenu,commands,storage` |
-| B | `--lang js --browsers firefox --firefox-mv 2 --features background,content,popup,options` |
-| C | `--lang ts --browsers chromium,firefox,safari --firefox-mv 3 --safari-mv 2 --features background,content,popup` |
-| D | `--lang ts --type content-only --browsers chromium,firefox --matches "https://example.com/*"` |
-| E | `--lang js --type content-only --browsers firefox --firefox-mv 2` |
+| A | `--lang ts --browser chrome --features background,content,popup,options,sidepanel,dnr,devtools,newtab --extras contextmenu,commands,storage` |
+| B | `--lang js --browser firefox --firefox-mv 2 --features background,content,popup,options` |
+| C | `--lang ts --browser chrome,firefox,safari --firefox-mv 3 --safari-mv 2 --features background,content,popup` |
+| D | `--lang ts --type content-only --browser chrome,firefox --matches "https://example.com/*"` |
+| E | `--lang js --type content-only --browser firefox --firefox-mv 2` |
 
 สำหรับแต่ละชุด ต้องผ่านทั้งหมดนี้:
 
@@ -638,14 +787,15 @@ web-extension init
 
 ### ทดสอบแบบมือ (ให้ผู้ใช้ทำ)
 
-- โหลด `dist/chromium-mv3` ใน Chrome และ `run:firefox` ใน Firefox แล้วเปิดหน้าเว็บที่ match ดูว่า content script ทำงาน
+- โหลด `dist/chrome-mv3` ใน Chrome และ `run:firefox` ใน Firefox แล้วเปิดหน้าเว็บที่ match ดูว่า content script ทำงาน
 - ทดสอบ `npx`, `bunx` และ `bun x` บน Windows อย่างน้อยหนึ่งรอบ หลัง `npm pack` แล้วติดตั้งจาก tarball
+- ทดสอบการตรวจ package manager ตามรายการ 6 วิธีรันในหัวข้อ 12 ("ต้องตรวจเองก่อนเขียนโค้ด") รวมถึงติดตั้ง global ด้วยทั้ง 4 ตัว และตรวจว่า CLI พิมพ์บรรทัด "Using <pm> (detected from ...)" ถูกต้อง และคำสั่ง install/next steps ตรงกับตัวที่เลือก
 
 ### เกณฑ์ผ่านทั้งโปรเจกต์
 
 - smoke test A - E ผ่านทั้งหมด
 - README ทั้งสองไฟล์ครบตามหัวข้อ 15 รวมถึงทั้ง `bunx` และ `bun x`
-- `NOTES.md` มีผลการตรวจทุกข้อในหัวข้อ 3 และ 8
+- `NOTES.md` มีผลการตรวจทุกข้อในหัวข้อ 3, 8 และตารางผลการรันจริงของหัวข้อ 12
 - `QUESTIONS.md` ว่าง หรือมีเฉพาะข้อที่ผู้ใช้ต้องตัดสินใจจริง
 
 ---
