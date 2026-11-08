@@ -21,7 +21,6 @@ function getCliVersion(): string {
       return data.version || '0.1.0';
     }
   } catch {
-    // ignore
   }
   return '0.1.0';
 }
@@ -68,7 +67,6 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Handle overwrite if requested
   if (ctx.ifExists === 'overwrite' && fs.existsSync(ctx.targetDir)) {
     const entries = fs.readdirSync(ctx.targetDir);
     for (const entry of entries) {
@@ -76,7 +74,6 @@ async function main(): Promise<void> {
     }
   }
 
-  // Generate project files
   const s = p.spinner();
   s.start('Generating project files...');
   try {
@@ -88,7 +85,6 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Git init
   if (ctx.git) {
     s.start('Initializing git repository...');
     const gitRes = await runCommand('git', ['init'], ctx.targetDir);
@@ -100,7 +96,6 @@ async function main(): Promise<void> {
     }
   }
 
-  // Install dependencies
   if (ctx.install) {
     const pmAvailable = await isCommandAvailable(ctx.pm);
     if (!pmAvailable) {
@@ -122,7 +117,6 @@ async function main(): Promise<void> {
     }
   }
 
-  // Relative path for cd instructions
   const relPath = path.relative(process.cwd(), ctx.targetDir);
   const cdInstruction = relPath && relPath !== '.' ? `cd ${relPath}\n  ` : '';
   const firstBrowser = ctx.browsers[0];

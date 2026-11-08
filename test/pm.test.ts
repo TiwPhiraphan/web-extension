@@ -98,7 +98,6 @@ describe('detectPackageManager', () => {
   });
 
   it('detects global path for bun/pnpm/yarn with confident: false', () => {
-    // POSIX bun
     const argvBun = '/home/user/.bun/bin/web-extension';
     const res1 = detectPackageManager({
       env: {},
@@ -115,7 +114,6 @@ describe('detectPackageManager', () => {
       confident: false,
     });
 
-    // Windows pnpm
     const argvPnpm = 'C:\\Users\\User\\AppData\\Local\\pnpm\\web-extension.cmd';
     const res2 = detectPackageManager({
       env: {},

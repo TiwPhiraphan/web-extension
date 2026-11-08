@@ -95,7 +95,6 @@ describe('generateProject', () => {
     expect(fs.existsSync(path.join(tmpDir, 'src/content/index.ts'))).toBe(true);
     expect(fs.existsSync(path.join(tmpDir, 'src/content/style.css'))).toBe(true);
 
-    // Must NOT have background, popup, options, sidepanel, devtools, newtab
     expect(fs.existsSync(path.join(tmpDir, 'src/background'))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, 'src/popup'))).toBe(false);
     expect(fs.existsSync(path.join(tmpDir, 'src/options'))).toBe(false);

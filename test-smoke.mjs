@@ -10,7 +10,6 @@ function run(cmd, cwd) {
 }
 
 function verifyDist(outDir, manifest) {
-  // Check icons
   if (manifest.icons) {
     for (const [size, iconRel] of Object.entries(manifest.icons)) {
       const p = path.join(outDir, iconRel);
@@ -18,7 +17,6 @@ function verifyDist(outDir, manifest) {
     }
   }
 
-  // Check background
   if (manifest.background?.service_worker) {
     const p = path.join(outDir, manifest.background.service_worker);
     if (!fs.existsSync(p)) throw new Error(`Missing service worker in dist: ${manifest.background.service_worker}`);
@@ -30,27 +28,23 @@ function verifyDist(outDir, manifest) {
     }
   }
 
-  // Check action popup
   const popup = manifest.action?.default_popup || manifest.browser_action?.default_popup;
   if (popup) {
     const p = path.join(outDir, popup);
     if (!fs.existsSync(p)) throw new Error(`Missing popup html in dist: ${popup}`);
   }
 
-  // Check options
   if (manifest.options_ui?.page) {
     const p = path.join(outDir, manifest.options_ui.page);
     if (!fs.existsSync(p)) throw new Error(`Missing options html in dist: ${manifest.options_ui.page}`);
   }
 
-  // Check sidepanel
   const panel = manifest.side_panel?.default_path || manifest.sidebar_action?.default_panel;
   if (panel) {
     const p = path.join(outDir, panel);
     if (!fs.existsSync(p)) throw new Error(`Missing sidepanel in dist: ${panel}`);
   }
 
-  // Check content scripts
   if (manifest.content_scripts) {
     for (const cs of manifest.content_scripts) {
       if (cs.js) {
@@ -74,20 +68,16 @@ async function testSuite(name, flags, expectedTargets, isContentOnly) {
   const tmpDir = path.join(os.tmpdir(), `we-smoke-${name.toLowerCase()}-${Date.now()}`);
 
   try {
-    // 1. Generate with CLI
     const genCmd = `node "${cliPath}" "${tmpDir}" ${flags} --yes --install --no-git --pm bun`;
     console.log(`[${name}] Generating in ${tmpDir}...`);
     run(genCmd);
 
-    // 2. Verify dependencies
     const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, 'package.json'), 'utf-8'));
     console.log(`[${name}] Package name: ${pkg.name}`);
 
-    // 3. Typecheck
     console.log(`[${name}] Running typecheck...`);
     run('bun run typecheck', tmpDir);
 
-    // 4. Build for each target
     for (const t of expectedTargets) {
       console.log(`[${name}] Building target: ${t.browser} (mode: ${t.id})...`);
       run(`bun run build:${t.browser}`, tmpDir);

@@ -41,7 +41,6 @@ describe('buildManifest', () => {
     expect(manifest.host_permissions).toEqual(['<all_urls>']);
     expect(manifest.declarative_net_request).toBeDefined();
 
-    // Must NOT contain firefox keys
     expect(manifest.sidebar_action).toBeUndefined();
     expect(manifest.browser_specific_settings).toBeUndefined();
   });
@@ -57,7 +56,6 @@ describe('buildManifest', () => {
     expect(manifest.browser_specific_settings?.gecko?.id).toBe('test-ext@example.com');
     expect(manifest.browser_specific_settings?.gecko?.strict_min_version).toBe('109.0');
 
-    // Must NOT contain chrome side_panel
     expect(manifest.side_panel).toBeUndefined();
     expect(manifest.permissions).not.toContain('sidePanel');
   });
@@ -74,7 +72,6 @@ describe('buildManifest', () => {
     expect(manifest.browser_specific_settings?.gecko?.id).toBe('test-ext@example.com');
     expect(manifest.browser_specific_settings?.gecko?.strict_min_version).toBe('58.0');
 
-    // MV2 must NOT have action, host_permissions, or declarative_net_request
     expect(manifest.action).toBeUndefined();
     expect(manifest.host_permissions).toBeUndefined();
     expect(manifest.declarative_net_request).toBeUndefined();

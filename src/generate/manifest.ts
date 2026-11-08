@@ -29,7 +29,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     },
   };
 
-  // Content script only mode
   if (ctx.projectType === 'content-only') {
     const matches = ctx.contentScript?.matches?.length
       ? ctx.contentScript.matches
@@ -63,10 +62,8 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     return manifest;
   }
 
-  // Full extension mode
   const permissions: string[] = [];
 
-  // Background
   if (ctx.features.includes('background')) {
     if (target.mv === 3) {
       if (cap.supportsBackgroundScripts) {
@@ -80,7 +77,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
         };
       }
     } else {
-      // MV2
       manifest.background = {
         scripts: [`src/background/index.${ext}`],
         persistent: false,
@@ -88,7 +84,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     }
   }
 
-  // Popup
   if (ctx.features.includes('popup')) {
     if (cap.popupKey === 'action') {
       manifest.action = {
@@ -101,7 +96,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     }
   }
 
-  // Options
   if (ctx.features.includes('options')) {
     if (target.mv === 3) {
       manifest.options_ui = {
@@ -116,7 +110,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     }
   }
 
-  // Side Panel
   if (ctx.features.includes('sidepanel') && cap.supportsSidePanel) {
     if (cap.sidePanelType === 'side_panel') {
       manifest.side_panel = {
@@ -130,19 +123,16 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     }
   }
 
-  // Devtools
   if (ctx.features.includes('devtools') && cap.supportsDevtools) {
     manifest.devtools_page = 'src/devtools/devtools.html';
   }
 
-  // New Tab
   if (ctx.features.includes('newtab') && cap.supportsNewtab) {
     manifest.chrome_url_overrides = {
       newtab: 'src/newtab/index.html',
     };
   }
 
-  // Content script
   if (ctx.features.includes('content')) {
     const matches = ctx.contentScript?.matches?.length
       ? ctx.contentScript.matches
@@ -165,7 +155,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     manifest.content_scripts = [contentEntry];
   }
 
-  // DeclarativeNetRequest (DNR) - MV3 only
   if (ctx.features.includes('dnr') && cap.supportsDnr && target.mv === 3) {
     manifest.declarative_net_request = {
       rule_resources: [
@@ -180,7 +169,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     manifest.host_permissions = ['<all_urls>'];
   }
 
-  // Extras
   if (ctx.extras.includes('storage')) {
     permissions.push('storage');
   }
@@ -213,7 +201,6 @@ export function buildManifest(ctx: Context, target: TargetConfig): Record<string
     manifest.permissions = permissions;
   }
 
-  // Firefox gecko settings
   if (target.browser === 'firefox') {
     manifest.browser_specific_settings = {
       gecko: {

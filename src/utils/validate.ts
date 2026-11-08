@@ -23,7 +23,6 @@ export function validatePackageName(name: string): true | string {
   if (trimmed.startsWith('.') || trimmed.startsWith('_')) {
     return 'Project name cannot start with a dot or underscore.';
   }
-  // Check valid npm package characters
   if (!/^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(trimmed)) {
     return 'Project name contains invalid characters for an npm package.';
   }

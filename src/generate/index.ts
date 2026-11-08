@@ -13,7 +13,9 @@ import { getInstallCommand, getRunCommand } from '../utils/pm.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Locates the templates directory regardless of whether running from src/ or dist/
+/**
+ * Locates the templates directory regardless of whether running from src/ or dist/.
+ */
 export function getTemplatesDir(): string {
   const candidate1 = path.resolve(__dirname, '../../templates');
   if (fs.existsSync(candidate1)) {
@@ -108,18 +110,14 @@ export function generateProject(ctx: Context): { targetDir: string; targets: Tar
     pm: ctx.pm,
   };
 
-  // 1. Ensure target directory exists
   fs.mkdirSync(targetDir, { recursive: true });
 
-  // 2. Copy templates/base
   const baseDir = path.join(templatesDir, 'base');
   copyDirectory(baseDir, targetDir, replacements);
 
-  // 3. Copy templates/<lang>
   const langDir = path.join(templatesDir, ctx.language);
   copyDirectory(langDir, targetDir, replacements);
 
-  // 4. Copy features
   if (ctx.projectType === 'content-only') {
     const contentDir = path.join(templatesDir, 'features', 'content', 'content-only', ctx.language);
     copyDirectory(contentDir, targetDir, replacements);
@@ -130,18 +128,15 @@ export function generateProject(ctx: Context): { targetDir: string; targets: Tar
       fs.copyFileSync(styleSrc, styleDest);
     }
   } else {
-    // Full extension features
     if (ctx.features.includes('background')) {
       const bgDir = path.join(templatesDir, 'features', 'background', ctx.language);
       copyDirectory(bgDir, targetDir, replacements);
 
-      // Append extras to background if selected
       const bgFile = path.join(targetDir, 'src', 'background', `index.${ext}`);
       let bgContent = fs.readFileSync(bgFile, 'utf-8');
 
       if (ctx.extras.includes('contextmenu')) {
-        bgContent += `\n// Context menu extra
-api.contextMenus?.create?.({
+        bgContent += `\napi.contextMenus?.create?.({
   id: '${slug}-menu',
   title: '${ctx.projectName} Action',
   contexts: ['all'],
@@ -153,15 +148,13 @@ api.contextMenus?.onClicked?.addListener((info, tab) => {
       }
 
       if (ctx.extras.includes('commands')) {
-        bgContent += `\n// Commands shortcut extra
-api.commands?.onCommand?.addListener((command) => {
+        bgContent += `\napi.commands?.onCommand?.addListener((command) => {
   console.log('Command received:', command);
 });\n`;
       }
 
       if (ctx.extras.includes('omnibox')) {
-        bgContent += `\n// Omnibox keyword extra
-api.omnibox?.onInputEntered?.addListener((text, disposition) => {
+        bgContent += `\napi.omnibox?.onInputEntered?.addListener((text, disposition) => {
   console.log('Omnibox search:', text, 'disposition:', disposition);
 });\n`;
       }
@@ -218,7 +211,6 @@ api.omnibox?.onInputEntered?.addListener((text, disposition) => {
     }
   }
 
-  // 5. targets.config
   const targetsConfigContent = `export interface TargetConfig {
   id: string;
   browser: 'chrome' | 'firefox' | 'safari';
@@ -241,8 +233,6 @@ export function getTarget(mode: string): TargetConfig {
     'utf-8',
   );
 
-  // 6. manifest.config
-  // Generate manifest per target as code
   const manifestMap: Record<string, any> = {};
   for (const t of targets) {
     manifestMap[t.id] = buildManifest(ctx, t);
@@ -265,7 +255,6 @@ export function buildManifest(target) {
 `;
   fs.writeFileSync(path.join(targetDir, `manifest.config.${ext}`), manifestConfigContent, 'utf-8');
 
-  // 7. build/mv2 if needed
   if (hasMv2) {
     const mv2Dir = path.join(targetDir, 'build');
     fs.mkdirSync(mv2Dir, { recursive: true });
@@ -290,7 +279,6 @@ export function buildMv2Plugin(options: { target: any; manifest: any }): Plugin 
       const root = config.root || process.cwd();
       const mv2Manifest = JSON.parse(JSON.stringify(manifest));
 
-      // 1. Build background
       if (manifest.background?.scripts?.length) {
         const outScripts: string[] = [];
         for (let i = 0; i < manifest.background.scripts.length; i++) {
@@ -316,7 +304,6 @@ export function buildMv2Plugin(options: { target: any; manifest: any }): Plugin 
         mv2Manifest.background.scripts = outScripts;
       }
 
-      // 2. Build content scripts
       if (manifest.content_scripts?.length) {
         for (let sIdx = 0; sIdx < manifest.content_scripts.length; sIdx++) {
           const cs = manifest.content_scripts[sIdx];
@@ -360,7 +347,6 @@ export function buildMv2Plugin(options: { target: any; manifest: any }): Plugin 
         }
       }
 
-      // 3. Copy icons
       const iconsDir = path.resolve(root, 'public', 'icons');
       if (fs.existsSync(iconsDir)) {
         const outIcons = path.join(outDir, 'icons');
@@ -370,7 +356,6 @@ export function buildMv2Plugin(options: { target: any; manifest: any }): Plugin 
         }
       }
 
-      // 4. Emit manifest.json
       fs.writeFileSync(
         path.join(outDir, 'manifest.json'),
         JSON.stringify(mv2Manifest, null, 2),
@@ -485,7 +470,6 @@ export function buildMv2Plugin(options) {
     fs.writeFileSync(path.join(mv2Dir, `mv2.${ext}`), mv2Content, 'utf-8');
   }
 
-  // 8. vite.config
   const hasMv3 = targets.some((t) => t.mv === 3);
   let pluginsExpression = '';
   if (hasMv3 && hasMv2) {
@@ -570,11 +554,9 @@ export default defineConfig(({ mode }) => {
 `;
   fs.writeFileSync(path.join(targetDir, `vite.config.${ext}`), viteConfigContent, 'utf-8');
 
-  // 9. package.json
   const pkgJson = buildPackageJson(ctx, targets);
   fs.writeFileSync(path.join(targetDir, 'package.json'), JSON.stringify(pkgJson, null, 2), 'utf-8');
 
-  // 10. tsconfig / jsconfig & env.d.ts
   const configs = buildConfigs(ctx, targets);
   for (const [relPath, content] of Object.entries(configs)) {
     const fullPath = path.join(targetDir, relPath);
@@ -582,7 +564,6 @@ export default defineConfig(({ mode }) => {
     fs.writeFileSync(fullPath, content, 'utf-8');
   }
 
-  // 11. README.md
   const readmeContent = buildProjectReadme(ctx, targets);
   fs.writeFileSync(path.join(targetDir, 'README.md'), readmeContent, 'utf-8');
 

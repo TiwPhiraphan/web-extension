@@ -4,7 +4,6 @@ import type { TargetConfig } from './targets.js';
 export function buildPackageJson(ctx: Context, targets: TargetConfig[]): Record<string, any> {
   const scripts: Record<string, string> = {};
 
-  // Build scripts per target
   for (const t of targets) {
     if (t.mv === 2 || t.browser === 'firefox') {
       scripts[`dev:${t.browser}`] = `vite build --watch --mode ${t.id}`;
@@ -18,7 +17,6 @@ export function buildPackageJson(ctx: Context, targets: TargetConfig[]): Record<
     }
   }
 
-  // dev and build aliases to first target
   const first = targets[0];
   scripts['dev'] = `npm run dev:${first.browser}`;
   scripts['build'] = `npm run build:${first.browser}`;

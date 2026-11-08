@@ -281,7 +281,6 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  // Handle positionals & subcommand
   if (positionals.length > 0) {
     if (positionals[0] === 'init') {
       result.subcommand = 'init';
@@ -289,7 +288,6 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
         result.dir = positionals[1];
       }
     } else {
-      // Called without explicit subcommand -> defaults to init, first positional is dir
       result.subcommand = 'init';
       result.dir = positionals[0];
     }
@@ -301,14 +299,12 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
 }
 
 export function validateFlagCombinations(args: ParsedArgs): void {
-  // If --help or --version, skip combination checks
   if (args.help || args.version) {
     return;
   }
 
   const isContentOnly = args.type === 'content-only';
 
-  // 1. --type content-only together with --features or --extras
   if (isContentOnly && (args.features !== undefined || args.extras !== undefined)) {
     throw new Error(
       'Cannot specify --features or --extras when --type is content-only.',
@@ -318,24 +314,20 @@ export function validateFlagCombinations(args: ParsedArgs): void {
   const browsers = args.browser || ['chrome'];
   const hasOnlySafari = browsers.length === 1 && browsers[0] === 'safari';
 
-  // 2. --features has sidepanel but target browser is only safari
   if (args.features?.includes('sidepanel') && hasOnlySafari) {
     throw new Error('Side panel feature is not supported when targeting only Safari.');
   }
 
-  // Determine if any selected target is MV2
   const hasFirefoxMv2 = browsers.includes('firefox') && args.firefoxMv === 2;
   const hasSafariMv2 = browsers.includes('safari') && args.safariMv === 2;
   const anyMv2 = hasFirefoxMv2 || hasSafariMv2;
 
-  // 3. --features has dnr while any target is MV2
   if (args.features?.includes('dnr') && anyMv2) {
     throw new Error(
       'DeclarativeNetRequest (DNR) is not supported with Manifest V2 targets.',
     );
   }
 
-  // 4. --extras has contextmenu, commands, or omnibox without background in features
   const hasBackground = !isContentOnly && (args.features === undefined || args.features.includes('background'));
   if (args.extras?.some((e) => ['contextmenu', 'commands', 'omnibox'].includes(e))) {
     if (!hasBackground) {
@@ -345,12 +337,10 @@ export function validateFlagCombinations(args: ParsedArgs): void {
     }
   }
 
-  // 5. --world MAIN while any target is MV2
   if (args.world === 'MAIN' && anyMv2) {
     throw new Error('Content script world MAIN is only supported in Manifest V3.');
   }
 
-  // Warnings for ineffective flags
   if (args.firefoxMv !== undefined && !browsers.includes('firefox')) {
     args.warnings.push('--firefox-mv specified without Firefox target.');
   }

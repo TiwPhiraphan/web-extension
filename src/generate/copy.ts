@@ -16,7 +16,6 @@ export function copyDirectory(
 
   for (const entry of entries) {
     const srcPath = path.join(sourceDir, entry.name);
-    // Rename _gitignore to .gitignore
     const targetName = entry.name === '_gitignore' ? '.gitignore' : entry.name;
     const destPath = path.join(targetDir, targetName);
 

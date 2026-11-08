@@ -4,12 +4,12 @@ Modern, flexible CLI tool to scaffold cross-browser extensions for Chromium (Chr
 
 ## Features
 
-- ⚡ **Vite + CRXJS:** Ultra-fast bundling, live reloading, and HMR (Hot Module Replacement) where supported.
-- 🌐 **Cross-Browser:** Supports Chromium (MV3), Firefox (MV3 & MV2), and Safari (MV3 & MV2).
-- 🧩 **Modular Components:** Choose only what you need (Background service worker, Content scripts, Popup, Options page, Side panel, DevTools page, New Tab override, declarativeNetRequest rules).
-- 🎯 **Content-Script Only Mode:** Purpose-built mode for DOM scrapers and injectors without unnecessary UI files.
-- 📦 **Automatic Type & Package Setup:** Installs browser-specific types (`@types/chrome`, `@types/firefox-webext-browser`) and auto-configures TypeScript (`tsconfig`) or JavaScript (`jsconfig`).
-- 🤖 **Smart Package Manager Detection:** Automatically detects whether you ran via `bun`, `pnpm`, `npm`, or `yarn`.
+- **Vite + CRXJS:** Ultra-fast bundling, live reloading, and HMR (Hot Module Replacement) where supported.
+- **Cross-Browser:** Supports Chromium (MV3), Firefox (MV3 & MV2), and Safari (MV3 & MV2).
+- **Modular Components:** Choose only what you need (Background service worker, Content scripts, Popup, Options page, Side panel, DevTools page, New Tab override, declarativeNetRequest rules).
+- **Content-Script Only Mode:** Purpose-built mode for DOM scrapers and injectors without unnecessary UI files.
+- **Automatic Type & Package Setup:** Installs browser-specific types (`@types/chrome`, `@types/firefox-webext-browser`) and auto-configures TypeScript (`tsconfig`) or JavaScript (`jsconfig`).
+- **Smart Package Manager Detection:** Automatically detects whether you ran via `bun`, `pnpm`, `npm`, or `yarn`.
 
 ---
 
@@ -181,3 +181,4 @@ bun run typecheck
 ## License
 
 [MIT](LICENSE)
+

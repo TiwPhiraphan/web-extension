@@ -23,7 +23,6 @@ export function buildConfigs(
     ctx.projectType === 'full' && ctx.features.includes('background');
 
   if (ctx.language === 'ts') {
-    // 1. tsconfig.json (root reference)
     const references = [{ path: './tsconfig.app.json' }];
     if (hasBackground) {
       references.push({ path: './tsconfig.background.json' });
@@ -39,7 +38,6 @@ export function buildConfigs(
       2,
     );
 
-    // 2. tsconfig.app.json
     const appConfig: Record<string, any> = {
       compilerOptions: {
         target: 'ES2022',
@@ -61,7 +59,6 @@ export function buildConfigs(
 
     files['tsconfig.app.json'] = JSON.stringify(appConfig, null, 2);
 
-    // 3. tsconfig.background.json (if background exists)
     if (hasBackground) {
       const bgLib = ['ES2022', 'WebWorker'];
       if (hasFirefox) {
@@ -88,7 +85,6 @@ export function buildConfigs(
       );
     }
 
-    // 4. tsconfig.node.json
     files['tsconfig.node.json'] = JSON.stringify(
       {
         compilerOptions: {
@@ -112,7 +108,6 @@ export function buildConfigs(
       2,
     );
   } else {
-    // JavaScript - jsconfig.json
     files['jsconfig.json'] = JSON.stringify(
       {
         compilerOptions: {
@@ -137,7 +132,6 @@ export function buildConfigs(
     );
   }
 
-  // env.d.ts
   const hasMv3 = targets.some((t) => t.mv === 3);
   const envDtsLines = ['/// <reference types="vite/client" />'];
   if (hasMv3) {

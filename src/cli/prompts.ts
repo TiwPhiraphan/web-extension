@@ -38,7 +38,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     return value as T;
   }
 
-  // 1. Project name & target dir
   let projectName = args.name;
   let targetDir = args.dir;
 
@@ -74,7 +73,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
 
   const resolvedTargetDir = path.resolve(targetDir!);
 
-  // 1b. Directory not empty
   let ifExists: IfExistsAction = args.ifExists || 'cancel';
   const dirExists = fs.existsSync(resolvedTargetDir);
   const dirHasFiles = dirExists && fs.readdirSync(resolvedTargetDir).length > 0;
@@ -108,7 +106,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     }
   }
 
-  // 2. Language
   let language: Language = args.lang || (useDefaults ? 'ts' : (undefined as any));
   if (!language) {
     if (!isTTY) throw new Error('Missing --lang flag in non-interactive environment.');
@@ -124,7 +121,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     ) as Language;
   }
 
-  // 3. Project type
   let projectType: ProjectType = args.type || (useDefaults ? 'full' : (undefined as any));
   if (!projectType) {
     if (!isTTY) throw new Error('Missing --type flag in non-interactive environment.');
@@ -140,7 +136,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     ) as ProjectType;
   }
 
-  // 4. Target browsers
   let browsers: BrowserKey[] = args.browser?.length
     ? args.browser
     : (useDefaults ? ['chrome'] : (undefined as any));
@@ -161,7 +156,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     ) as BrowserKey[];
   }
 
-  // 5. Firefox MV
   let firefoxMv: ManifestVersion | undefined = args.firefoxMv;
   if (browsers.includes('firefox') && firefoxMv === undefined) {
     if (useDefaults) {
@@ -182,7 +176,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     }
   }
 
-  // 5b. Safari MV
   let safariMv: ManifestVersion | undefined = args.safariMv;
   if (browsers.includes('safari') && safariMv === undefined) {
     if (useDefaults) {
@@ -208,7 +201,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     (browsers.includes('safari') && safariMv === 2);
   const onlySafari = browsers.length === 1 && browsers[0] === 'safari';
 
-  // 6. Features (Full extension only)
   let features: FeatureKey[] = [];
   if (projectType === 'full') {
     if (args.features !== undefined) {
@@ -255,7 +247,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     }
   }
 
-  // 7. Content script options (if content script is active)
   const hasContentScript = projectType === 'content-only' || features.includes('content');
   let contentScriptOptions: Context['contentScript'] = undefined;
 
@@ -352,7 +343,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     };
   }
 
-  // 8. Extras (Full extension only)
   let extras: ExtraKey[] = [];
   if (projectType === 'full') {
     if (args.extras !== undefined) {
@@ -402,7 +392,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     }
   }
 
-  // 9a. Package manager detection
   const detectedPm = detectPackageManager({
     flag: args.pm,
     targetDir: resolvedTargetDir,
@@ -426,7 +415,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     p.log.info(`Using ${chosenPm} (detected from ${formatPmSource(detectedPm.source)})`);
   }
 
-  // 9. Install dependencies
   let install: boolean = args.install ?? true;
   if (args.install === undefined) {
     if (useDefaults || !isTTY) {
@@ -441,7 +429,6 @@ export async function runPrompts(args: ParsedArgs): Promise<Context> {
     }
   }
 
-  // 10. Init git repository
   let git: boolean = args.git ?? true;
   const alreadyInGit = isInsideGitRepo(resolvedTargetDir);
   if (args.git === undefined) {

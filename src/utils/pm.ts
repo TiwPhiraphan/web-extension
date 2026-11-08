@@ -44,7 +44,6 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
   const argv1 = input.argv1 ?? process.argv[1];
   const versions = input.versions ?? (process.versions as Record<string, string | undefined>);
 
-  // 1. Explicit flag
   if (input.flag) {
     const f = input.flag.trim().toLowerCase();
     if (f === 'npm' || f === 'pnpm' || f === 'yarn' || f === 'bun') {
@@ -52,7 +51,6 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
     }
   }
 
-  // 2. npm_config_user_agent
   const userAgent = env.npm_config_user_agent;
   if (userAgent) {
     const ua = userAgent.trim().toLowerCase();
@@ -70,10 +68,8 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
     }
   }
 
-  // Helper to find nearest file climbing up directories
   const startDir = path.resolve(input.targetDir || input.cwd || process.cwd());
 
-  // 3. packageManager field in package.json
   let curDir = startDir;
   while (true) {
     const pkgPath = path.join(curDir, 'package.json');
@@ -97,7 +93,6 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
           }
         }
       } catch {
-        // ignore JSON parse error
       }
     }
     const parent = path.dirname(curDir);
@@ -105,7 +100,6 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
     curDir = parent;
   }
 
-  // 4. Lockfile check climbing up to root or git repo root
   curDir = startDir;
   while (true) {
     const found: PackageManager[] = [];
@@ -126,7 +120,6 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
       return { name: found[0], source: 'lockfile', confident: true };
     }
     if (found.length > 1) {
-      // Multiple lockfiles found: choose priority order bun, pnpm, yarn, npm, but not confident
       const priority: PackageManager[] = ['bun', 'pnpm', 'yarn', 'npm'];
       const chosen = priority.find((p) => found.includes(p))!;
       return { name: chosen, source: 'lockfile', confident: false };
@@ -140,7 +133,6 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
     curDir = parent;
   }
 
-  // 5. Global path check
   if (argv1) {
     try {
       const real = fsImpl.existsSync(argv1) ? fsImpl.realpathSync(argv1) : argv1;
@@ -160,16 +152,13 @@ export function detectPackageManager(input: DetectPmInput = {}): PmResult {
         return { name: 'yarn', source: 'global-path', confident: false };
       }
     } catch {
-      // ignore
     }
   }
 
-  // 6. Runtime bun
   if (versions && versions.bun) {
     return { name: 'bun', source: 'runtime', confident: false };
   }
 
-  // 7. Default
   return { name: 'npm', source: 'default', confident: false };
 }
 
