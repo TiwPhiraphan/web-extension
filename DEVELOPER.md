@@ -144,3 +144,4 @@ Source manifests can be overridden per browser using `manifest.<browser>.json` (
 - **Automated CI Workflow:** Located at `.github/workflows/ci.yml`. Runs on all pull requests and pushes to `main`.
 - **Lifecycle Prepack:** `package.json` includes `"prepack": "node scripts/build.mjs"`, guaranteeing that `dist/index.js` is freshly built before `npm pack` or `npm publish`.
 - **Registry Permissions:** The package name `web-extension` on npm has previous unpublish records; live publishing requires ownership authorization on npmjs.org.
+

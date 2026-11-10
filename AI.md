@@ -189,3 +189,4 @@ When scaffolding a project with all entries (`ctx.lang === 'ts'`), the output st
 - **MAIN-World Scripts:** Must execute in page context (`world: "MAIN"`). Must **never** import `webextension-polyfill` or call `chrome.*` / `browser.*`. Communicates with isolated content scripts exclusively via `window.postMessage`.
 - **TypeScript and JavaScript Parity:** Generated code templates share identical logic; only type annotations and file extensions differ (`.ts` vs `.js`).
 - **No Leading Underscores:** Output folders must not start with `_` (reserved by Chromium). Development files live under `web-extension-dev/`.
+
