@@ -107,9 +107,17 @@ Version 3 drops Vite, CRXJS, Manifest V2 output, the `targets.config` and `manif
 bun install
 bun run typecheck
 bun run test
+bun run test:e2e
 bun run build
 ```
 
-`node test/e2e/chromium.cjs <project>` is an optional check in a real Chromium; see the header of that file.
+`bun run test:e2e` runs the automated browser check in real Chromium via Playwright.
 
-MIT
+## Documentation
+
+- [DEVELOPER.md](DEVELOPER.md) — Architecture guide, internal bundler pipeline, and developer workflow.
+- [AI.md](AI.md) — Deterministic CLI parameter matrix, invariants, and agent contracts.
+
+## License
+
+[MIT](LICENSE)
