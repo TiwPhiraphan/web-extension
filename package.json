@@ -8,7 +8,10 @@
   },
   "files": [
     "dist",
-    "schemas"
+    "schemas",
+    "AI.md",
+    "DEVELOPER.md",
+    "AGENTS.md"
   ],
   "engines": {
     "node": ">=20"
