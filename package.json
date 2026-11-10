@@ -10,8 +10,7 @@
     "dist",
     "schemas",
     "AI.md",
-    "DEVELOPER.md",
-    "AGENTS.md"
+    "DEVELOPER.md"
   ],
   "engines": {
     "node": ">=20"
