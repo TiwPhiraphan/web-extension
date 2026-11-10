@@ -1,125 +1,68 @@
-import { describe, it, expect } from 'vitest';
-import { parseCliArgs, validateFlagCombinations } from '../src/cli/args.js';
+import { describe, expect, it } from 'vitest';
+import {
+  UsageError,
+  parseBrowserList,
+  parseBuildArgs,
+  parseDevArgs,
+  parseEntryList,
+  parseInitArgs,
+} from '../src/cli/args';
 
-describe('parseCliArgs', () => {
-  it('treats first argument as [dir] when subcommand is omitted', () => {
-    const res = parseCliArgs(['my-app', '--yes']);
-    expect(res.subcommand).toBe('init');
-    expect(res.dir).toBe('my-app');
-    expect(res.yes).toBe(true);
+describe('parseBrowserList', () => {
+  it('accepts commas, repeats, case and the chromium alias, and drops duplicates', () => {
+    expect(parseBrowserList(['Chrome,firefox', 'chromium', 'safari'])).toEqual(['chrome', 'firefox', 'safari']);
   });
-
-  it('handles explicit init subcommand', () => {
-    const res = parseCliArgs(['init', 'custom-dir', '--lang', 'ts']);
-    expect(res.subcommand).toBe('init');
-    expect(res.dir).toBe('custom-dir');
-    expect(res.lang).toBe('ts');
-  });
-
-  it('--browser supports comma-separated list and repeated flags', () => {
-    const res1 = parseCliArgs(['--browser', 'chrome,firefox']);
-    const res2 = parseCliArgs(['--browser', 'chrome', '--browser', 'firefox']);
-    expect(res1.browser).toEqual(['chrome', 'firefox']);
-    expect(res2.browser).toEqual(['chrome', 'firefox']);
-  });
-
-  it('maps chromium to chrome alias and deduplicates values silently', () => {
-    const res = parseCliArgs(['--browser', 'chromium,chrome,firefox']);
-    expect(res.browser).toEqual(['chrome', 'firefox']);
-  });
-
-  it('rejects invalid option values with helpful error message', () => {
-    expect(() => parseCliArgs(['--browser', 'safari,edge'])).toThrow(
-      'Invalid value "edge" for --browser. Expected one of: chrome, firefox, safari',
-    );
-    expect(() => parseCliArgs(['--lang', 'python'])).toThrow(
-      'Invalid value "python" for --lang. Expected one of: ts, js',
-    );
-    expect(() => parseCliArgs(['--type', 'plugin'])).toThrow(
-      'Invalid value "plugin" for --type. Expected one of: full, content-only',
-    );
-  });
-
-  it('handles features none and extras none', () => {
-    const res = parseCliArgs(['--features', 'none', '--extras', 'none']);
-    expect(res.features).toEqual([]);
-    expect(res.extras).toEqual([]);
-  });
-
-  it('parses --bundler vite and --bundler none correctly', () => {
-    const res1 = parseCliArgs(['--bundler', 'vite']);
-    expect(res1.bundler).toBe('vite');
-
-    const res2 = parseCliArgs(['--bundler', 'none']);
-    expect(res2.bundler).toBe('none');
-  });
-
-  it('supports --vanilla and --no-bundler shorthands for --bundler none', () => {
-    const res1 = parseCliArgs(['--vanilla']);
-    expect(res1.bundler).toBe('none');
-
-    const res2 = parseCliArgs(['--no-bundler']);
-    expect(res2.bundler).toBe('none');
-  });
-
-  it('rejects invalid bundler value', () => {
-    expect(() => parseCliArgs(['--bundler', 'webpack'])).toThrow(
-      'Invalid value "webpack" for --bundler. Expected one of: vite, none',
-    );
+  it('rejects unknown browsers', () => {
+    expect(() => parseBrowserList(['edge'])).toThrow(UsageError);
   });
 });
 
-describe('validateFlagCombinations', () => {
-  it('throws when --type content-only is combined with --features or --extras', () => {
-    const args1 = parseCliArgs(['--type', 'content-only', '--features', 'content']);
-    expect(() => validateFlagCombinations(args1)).toThrow(
-      'Cannot specify --features or --extras when --type is content-only.',
-    );
-
-    const args2 = parseCliArgs(['--type', 'content-only', '--extras', 'storage']);
-    expect(() => validateFlagCombinations(args2)).toThrow(
-      'Cannot specify --features or --extras when --type is content-only.',
-    );
+describe('parseEntryList', () => {
+  it('treats "none" as an empty list', () => {
+    expect(parseEntryList(['none'])).toEqual([]);
   });
-
-  it('throws when sidepanel is selected for Safari only', () => {
-    const args = parseCliArgs(['--browser', 'safari', '--features', 'sidepanel']);
-    expect(() => validateFlagCombinations(args)).toThrow(
-      'Side panel feature is not supported when targeting only Safari.',
-    );
-  });
-
-  it('throws when dnr is selected with MV2 target', () => {
-    const args = parseCliArgs(['--browser', 'firefox', '--firefox-mv', '2', '--features', 'dnr']);
-    expect(() => validateFlagCombinations(args)).toThrow(
-      'DeclarativeNetRequest (DNR) is not supported with Manifest V2 targets.',
-    );
-  });
-
-  it('throws when extras require background but background is missing', () => {
-    const args = parseCliArgs(['--features', 'popup', '--extras', 'contextmenu']);
-    expect(() => validateFlagCombinations(args)).toThrow(
-      'Extras contextmenu, commands, and omnibox require background feature.',
-    );
-  });
-
-  it('throws when --world MAIN is used with MV2 target', () => {
-    const args = parseCliArgs(['--browser', 'firefox', '--firefox-mv', '2', '--features', 'content', '--world', 'MAIN']);
-    expect(() => validateFlagCombinations(args)).toThrow(
-      'Content script world MAIN is only supported in Manifest V3.',
-    );
-  });
-
-  it('warns instead of erroring for ineffective flags', () => {
-    const args = parseCliArgs(['--browser', 'chrome', '--firefox-mv', '2']);
-    expect(() => validateFlagCombinations(args)).not.toThrow();
-    expect(args.warnings.some((w) => w.includes('--firefox-mv'))).toBe(true);
-  });
-
-  it('warns when safari is combined with --bundler none', () => {
-    const args = parseCliArgs(['--browser', 'safari', '--bundler', 'none']);
-    validateFlagCombinations(args);
-    expect(args.warnings.some((w) => w.includes('Safari target with vanilla'))).toBe(true);
+  it('rejects unknown entries', () => {
+    expect(() => parseEntryList(['background,devtools'])).toThrow(/Invalid entry "devtools"/);
   });
 });
 
+describe('parseInitArgs', () => {
+  it('reads every option', () => {
+    const args = parseInitArgs([
+      'my-ext', '--browser', 'chrome,firefox', '--entries', 'background,popup', '--lang', 'typescript',
+      '--matches', 'https://a.com/*,https://b.com/*', '--pm', 'pnpm', '--no-install', '--git', '-y',
+    ]);
+    expect(args).toMatchObject({
+      dir: 'my-ext', browsers: ['chrome', 'firefox'], entries: ['background', 'popup'], lang: 'ts',
+      matches: ['https://a.com/*', 'https://b.com/*'], pm: 'pnpm', install: false, git: true, yes: true,
+    });
+  });
+  it('leaves unset options undefined so prompts can ask', () => {
+    expect(parseInitArgs([])).toMatchObject({ dir: undefined, browsers: undefined, install: undefined, git: undefined });
+  });
+  it.each([
+    [['--lang', 'rust']],
+    [['--pm', 'deno']],
+    [['--install', '--no-install']],
+    [['a', 'b']],
+    [['--nope']],
+  ])('rejects %j', (argv) => {
+    expect(() => parseInitArgs(argv)).toThrow(UsageError);
+  });
+});
+
+describe('parseBuildArgs / parseDevArgs', () => {
+  it('build defaults to chrome with minify on', () => {
+    expect(parseBuildArgs([])).toMatchObject({ browsers: ['chrome'], minify: true, sourcemap: false });
+  });
+  it('build accepts several browsers and flags', () => {
+    expect(parseBuildArgs(['--browser', 'chrome,firefox', '--no-minify', '--sourcemap'])).toMatchObject({
+      browsers: ['chrome', 'firefox'], minify: false, sourcemap: true,
+    });
+  });
+  it('dev takes one browser and a valid port', () => {
+    expect(parseDevArgs(['--browser', 'firefox', '--port', '4000'])).toMatchObject({ browser: 'firefox', port: 4000 });
+    expect(() => parseDevArgs(['--browser', 'chrome,firefox'])).toThrow(UsageError);
+    expect(() => parseDevArgs(['--port', 'abc'])).toThrow(UsageError);
+  });
+});

@@ -1,0 +1,625 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chrome extension manifest (MV3)",
+  "description": "Also valid for other Chromium browsers that accept Chrome extensions (Brave, Vivaldi, Arc, ...).",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "name",
+    "version"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "manifest_version": {
+      "enum": [
+        3
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 75
+    },
+    "short_name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "description": "1 to 4 dot-separated integers (0-999999999)",
+      "pattern": "^(0|[1-9][0-9]{0,8})([.](0|[1-9][0-9]{0,8})){0,3}$"
+    },
+    "version_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 132
+    },
+    "author": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "homepage_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "default_locale": {
+      "type": "string"
+    },
+    "icons": {
+      "type": "object",
+      "description": "Map of size -> path, e.g. { \"16\": \"icons/16.png\" }",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "string"
+        }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "enum": [
+              "activeTab",
+              "alarms",
+              "audio",
+              "background",
+              "bookmarks",
+              "browsingData",
+              "certificateProvider",
+              "clipboardRead",
+              "clipboardWrite",
+              "contentSettings",
+              "contextMenus",
+              "cookies",
+              "debugger",
+              "declarativeContent",
+              "declarativeNetRequest",
+              "declarativeNetRequestFeedback",
+              "declarativeNetRequestWithHostAccess",
+              "desktopCapture",
+              "documentScan",
+              "downloads",
+              "downloads.open",
+              "downloads.ui",
+              "enterprise.deviceAttributes",
+              "enterprise.hardwarePlatform",
+              "enterprise.networkingAttributes",
+              "enterprise.platformKeys",
+              "favicon",
+              "fileBrowserHandler",
+              "fileSystemProvider",
+              "fontSettings",
+              "gcm",
+              "geolocation",
+              "history",
+              "identity",
+              "identity.email",
+              "idle",
+              "loginState",
+              "management",
+              "nativeMessaging",
+              "notifications",
+              "offscreen",
+              "pageCapture",
+              "platformKeys",
+              "power",
+              "printerProvider",
+              "printing",
+              "printingMetrics",
+              "privacy",
+              "processes",
+              "proxy",
+              "readingList",
+              "runtime",
+              "scripting",
+              "search",
+              "sessions",
+              "sidePanel",
+              "storage",
+              "system.cpu",
+              "system.display",
+              "system.memory",
+              "system.storage",
+              "tabCapture",
+              "tabGroups",
+              "tabs",
+              "topSites",
+              "tts",
+              "ttsEngine",
+              "unlimitedStorage",
+              "vpnProvider",
+              "wallpaper",
+              "webAuthenticationProxy",
+              "webNavigation",
+              "webRequest",
+              "webRequestAuthProvider",
+              "webRequestBlocking"
+            ]
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
+    "optional_permissions": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "enum": [
+              "activeTab",
+              "alarms",
+              "audio",
+              "background",
+              "bookmarks",
+              "browsingData",
+              "certificateProvider",
+              "clipboardRead",
+              "clipboardWrite",
+              "contentSettings",
+              "contextMenus",
+              "cookies",
+              "debugger",
+              "declarativeContent",
+              "declarativeNetRequest",
+              "declarativeNetRequestFeedback",
+              "declarativeNetRequestWithHostAccess",
+              "desktopCapture",
+              "documentScan",
+              "downloads",
+              "downloads.open",
+              "downloads.ui",
+              "enterprise.deviceAttributes",
+              "enterprise.hardwarePlatform",
+              "enterprise.networkingAttributes",
+              "enterprise.platformKeys",
+              "favicon",
+              "fileBrowserHandler",
+              "fileSystemProvider",
+              "fontSettings",
+              "gcm",
+              "geolocation",
+              "history",
+              "identity",
+              "identity.email",
+              "idle",
+              "loginState",
+              "management",
+              "nativeMessaging",
+              "notifications",
+              "offscreen",
+              "pageCapture",
+              "platformKeys",
+              "power",
+              "printerProvider",
+              "printing",
+              "printingMetrics",
+              "privacy",
+              "processes",
+              "proxy",
+              "readingList",
+              "runtime",
+              "scripting",
+              "search",
+              "sessions",
+              "sidePanel",
+              "storage",
+              "system.cpu",
+              "system.display",
+              "system.memory",
+              "system.storage",
+              "tabCapture",
+              "tabGroups",
+              "tabs",
+              "topSites",
+              "tts",
+              "ttsEngine",
+              "unlimitedStorage",
+              "vpnProvider",
+              "wallpaper",
+              "webAuthenticationProxy",
+              "webNavigation",
+              "webRequest",
+              "webRequestAuthProvider",
+              "webRequestBlocking"
+            ]
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
+    "host_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "MV3: match patterns the extension may access"
+    },
+    "optional_host_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_scripts": {
+      "type": "array",
+      "description": "Scripts/styles injected into matching pages",
+      "items": {
+        "type": "object",
+        "required": [
+          "matches"
+        ],
+        "properties": {
+          "matches": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(<all_urls>|(\\*|https?|wss?|ftp|file)://(\\*|\\*\\.[^/*]+|[^/*]*)/.*)$",
+              "description": "Match pattern, e.g. https://*.example.com/* or <all_urls>"
+            }
+          },
+          "exclude_matches": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(<all_urls>|(\\*|https?|wss?|ftp|file)://(\\*|\\*\\.[^/*]+|[^/*]*)/.*)$",
+              "description": "Match pattern, e.g. https://*.example.com/* or <all_urls>"
+            }
+          },
+          "include_globs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude_globs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "js": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "css": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "run_at": {
+            "enum": [
+              "document_start",
+              "document_end",
+              "document_idle"
+            ],
+            "default": "document_idle"
+          },
+          "all_frames": {
+            "type": "boolean"
+          },
+          "match_about_blank": {
+            "type": "boolean"
+          },
+          "match_origin_as_fallback": {
+            "type": "boolean"
+          },
+          "world": {
+            "enum": [
+              "ISOLATED",
+              "MAIN"
+            ],
+            "default": "ISOLATED",
+            "description": "MAIN runs in the page's JS context (can patch XHR/fetch, no chrome.* APIs)"
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "suggested_key": {
+            "type": "object",
+            "properties": {
+              "default": {
+                "type": "string"
+              },
+              "mac": {
+                "type": "string"
+              },
+              "windows": {
+                "type": "string"
+              },
+              "linux": {
+                "type": "string"
+              },
+              "chromeos": {
+                "type": "string"
+              },
+              "android": {
+                "type": "string"
+              },
+              "ios": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "declarative_net_request": {
+      "type": "object",
+      "properties": {
+        "rule_resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "enabled",
+              "path"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "devtools_page": {
+      "type": "string"
+    },
+    "update_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "background": {
+      "type": "object",
+      "properties": {
+        "service_worker": {
+          "type": "string"
+        },
+        "scripts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Only for cross-browser manifests (Firefox); Chromium uses service_worker"
+        },
+        "type": {
+          "enum": [
+            "classic",
+            "module"
+          ]
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "default_icon": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "description": "Map of size -> path, e.g. { \"16\": \"icons/16.png\" }",
+              "patternProperties": {
+                "^[0-9]+$": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "default_title": {
+          "type": "string"
+        },
+        "default_popup": {
+          "type": "string"
+        }
+      }
+    },
+    "options_ui": {
+      "type": "object",
+      "required": [
+        "page"
+      ],
+      "properties": {
+        "page": {
+          "type": "string"
+        },
+        "open_in_tab": {
+          "type": "boolean"
+        },
+        "chrome_style": {
+          "type": "boolean"
+        }
+      }
+    },
+    "options_page": {
+      "type": "string"
+    },
+    "web_accessible_resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "resources"
+        ],
+        "properties": {
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "matches": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(<all_urls>|(\\*|https?|wss?|ftp|file)://(\\*|\\*\\.[^/*]+|[^/*]*)/.*)$",
+              "description": "Match pattern, e.g. https://*.example.com/* or <all_urls>"
+            }
+          },
+          "extension_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "use_dynamic_url": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "content_security_policy": {
+      "type": "object",
+      "properties": {
+        "extension_pages": {
+          "type": "string"
+        },
+        "sandbox": {
+          "type": "string"
+        }
+      }
+    },
+    "sandbox": {
+      "type": "object",
+      "properties": {
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "incognito": {
+      "enum": [
+        "spanning",
+        "split",
+        "not_allowed"
+      ]
+    },
+    "omnibox": {
+      "type": "object",
+      "required": [
+        "keyword"
+      ],
+      "properties": {
+        "keyword": {
+          "type": "string"
+        }
+      }
+    },
+    "chrome_url_overrides": {
+      "type": "object",
+      "properties": {
+        "newtab": {
+          "type": "string"
+        },
+        "bookmarks": {
+          "type": "string"
+        },
+        "history": {
+          "type": "string"
+        }
+      }
+    },
+    "side_panel": {
+      "type": "object",
+      "properties": {
+        "default_path": {
+          "type": "string"
+        }
+      }
+    },
+    "externally_connectable": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "matches": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(<all_urls>|(\\*|https?|wss?|ftp|file)://(\\*|\\*\\.[^/*]+|[^/*]*)/.*)$",
+            "description": "Match pattern, e.g. https://*.example.com/* or <all_urls>"
+          }
+        },
+        "accepts_tls_channel_id": {
+          "type": "boolean"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "properties": {
+        "managed_schema": {
+          "type": "string"
+        }
+      }
+    },
+    "oauth2": {
+      "type": "object",
+      "properties": {
+        "client_id": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "key": {
+      "type": "string"
+    },
+    "minimum_chrome_version": {
+      "type": "string",
+      "description": "1 to 4 dot-separated integers (0-999999999)",
+      "pattern": "^(0|[1-9][0-9]{0,8})([.](0|[1-9][0-9]{0,8})){0,3}$"
+    }
+  },
+  "additionalProperties": true
+}
