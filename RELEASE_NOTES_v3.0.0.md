@@ -55,3 +55,4 @@ bun run build
 - [README.md](https://github.com/TiwPhiraphan/web-extension#readme) — Getting started guide and CLI flags reference.
 - [DEVELOPER.md](https://github.com/TiwPhiraphan/web-extension/blob/main/DEVELOPER.md) — Architecture guide, bundler pipeline, and dev server design.
 - [AI.md](https://github.com/TiwPhiraphan/web-extension/blob/main/AI.md) — Deterministic parameter matrix, invariants, and agent contracts.
+
